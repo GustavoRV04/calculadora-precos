@@ -10,7 +10,7 @@
 
 ### Meta da Sprint
 
-> Registrar itens com valores diferentes; Selecionar diversos itens para criar um único prato; Calcular o valor do prato.
+> Montar e calcular o custo de produção de um prato.
 
 
 ## 2. Resultado da Sprint
