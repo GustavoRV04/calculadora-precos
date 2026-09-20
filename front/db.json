@@ -1,0 +1,51 @@
+{
+  "produtos": [
+    {
+      "id": "1",
+      "nome": "Tomate"
+    },
+    {
+      "id": "2",
+      "nome": "Queijo"
+    }
+  ],
+  "itens": [
+    {
+      "id": "2",
+      "produtoId": 2,
+      "unidadeMedida": "KG",
+      "preco": 35
+    },
+    {
+      "produtoId": 1,
+      "unidadeMedida": "KG",
+      "preco": 8.5,
+      "id": "4V34O0pNB44"
+    }
+  ],
+  "pratos": [
+    {
+      "id": "1",
+      "nome": "Pizza Marguerita"
+    },
+    {
+      "id": "2",
+      "nome": "Salada"
+    }
+  ],
+  "pratoItens": [
+    {
+      "id": "1",
+      "pratoId": 1,
+      "itemId": 1,
+      "quantidade": 0.2
+    },
+    {
+      "id": "2",
+      "pratoId": 1,
+      "itemId": 2,
+      "quantidade": 0.15
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
