@@ -1,0 +1,96 @@
+{
+  "produtos": [
+    {
+      "id": "1",
+      "nome": "Tomate"
+    },
+    {
+      "id": "2",
+      "nome": "Queijo"
+    },
+    {
+      "nome": "Alface",
+      "id": "sEeepWMMID8"
+    },
+    {
+      "nome": "Peito de frango",
+      "id": "-W6I-n84Kbk"
+    }
+  ],
+  "itens": [
+    {
+      "id": "2",
+      "produtoId": 2,
+      "precoCompra": 10,
+      "quantidadeCompra": 500,
+      "unidadeMedida": "G"
+    },
+    {
+      "id": "1",
+      "produtoId": 1,
+      "precoCompra": 35,
+      "quantidadeCompra": 1000,
+      "unidadeMedida": "G"
+    },
+    {
+      "produtoId": "2",
+      "precoCompra": 15,
+      "quantidadeCompra": 200,
+      "unidadeMedida": "G",
+      "id": "VulnacPyEIY"
+    },
+    {
+      "produtoId": "-W6I-n84Kbk",
+      "precoCompra": 19.6,
+      "quantidadeCompra": 1000,
+      "unidadeMedida": "G",
+      "id": "aom4mbbd728"
+    }
+  ],
+  "pratos": [
+    {
+      "id": "1",
+      "nome": "Pizza Marguerita"
+    },
+    {
+      "id": "2",
+      "nome": "Salada"
+    },
+    {
+      "nome": "Hamburguer",
+      "id": "rXdEzRX9IHg"
+    },
+    {
+      "nome": "hamburguer",
+      "id": "KrNKWeemRGI"
+    }
+  ],
+  "pratoItens": [
+    {
+      "id": "1",
+      "pratoId": 1,
+      "produtoId": 1,
+      "quantidadeUtilizada": 20
+    },
+    {
+      "id": "2",
+      "pratoId": 1,
+      "produtoId": 2,
+      "quantidadeUtilizada": 15
+    },
+    {
+      "pratoId": "rXdEzRX9IHg",
+      "produtoId": "2",
+      "quantidadeUtilizada": 20,
+      "id": "1BynVOj--a0"
+    },
+    {
+      "pratoId": "rXdEzRX9IHg",
+      "produtoId": "-W6I-n84Kbk",
+      "quantidadeUtilizada": 100,
+      "id": "gdqCS1RI8N0"
+    }
+  ],
+  "restaurantes": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}
