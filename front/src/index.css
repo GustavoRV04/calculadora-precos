@@ -44,8 +44,9 @@ hr {
   display: none;
 }
 
-/* Transforms cada seção/componente em um Card elegante */
-#root > div > div {
+/* Transforma cada seção/componente num Card elegante */
+#root > div > div,
+.app-header {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
@@ -65,12 +66,12 @@ h2 {
   color: var(--text-main);
 }
 
-/* Inputs e Selects */
+/* Inputs e Selects globais */
 input, select {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.95rem;
   color: var(--text-main);
   background-color: #ffffff;
@@ -82,6 +83,7 @@ input, select {
 input:focus, select:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-radius: 10px;
 }
 
 /* Botões */
@@ -127,4 +129,46 @@ h3 {
   color: #059669;
   margin: 8px 0 0 0;
   text-align: right;
+}
+
+/* --- Estilos do Header --- */
+.app-header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.app-header-info span {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.app-header-info select {
+  flex: 1;
+}
+
+.btn-novo {
+  white-space: nowrap;
+}
+
+.restaurante-form-inline {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Estilos de tom cinza para o Placeholder do Select */
+.select-placeholder {
+  color: #9ca3af !important;
+}
+
+.option-placeholder {
+  color: #9ca3af;
+}
+
+.option-item {
+  color: var(--text-main);
 }

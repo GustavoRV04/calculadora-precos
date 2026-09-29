@@ -1,3 +1,8 @@
+import { useState } from "react";
+
+import Header
+from "./components/Header";
+
 import ProdutoForm
 from "./components/ProdutoForm";
 
@@ -16,12 +21,21 @@ from "./components/ResumoPrato";
 
 function App() {
 
+  const [restauranteAtivo, setRestauranteAtivo] = useState("");
+
   return (
     <div>
 
       <h1>
         Calculadora de Preços
       </h1>
+
+      <Header 
+        restauranteAtivo={restauranteAtivo} 
+        setRestauranteAtivo={setRestauranteAtivo} 
+      />
+
+      <hr />
 
       <ProdutoForm />
 
