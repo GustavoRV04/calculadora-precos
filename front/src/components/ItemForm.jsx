@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   listarProdutos,
-  criarItem
+  criarItem,
 } from "../services/produtoService";
 
-export default function ItemForm() {
+export default function ItemForm({
+  restauranteAtivo
+}) {
 
   const [produtos, setProdutos] =
     useState([]);
@@ -22,10 +24,14 @@ export default function ItemForm() {
 
   useEffect(() => {
 
+    if (!restauranteAtivo) return;
+
     async function carregar() {
 
       const dados =
-        await listarProdutos();
+        await listarProdutos(
+          restauranteAtivo
+        );
 
       setProdutos(dados);
 
@@ -36,7 +42,7 @@ export default function ItemForm() {
 
     carregar();
 
-  }, []);
+  }, [restauranteAtivo]);
 
   async function salvar() {
 

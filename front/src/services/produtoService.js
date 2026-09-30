@@ -1,10 +1,10 @@
 
 import API_URL from "./api";
 
-export async function listarProdutos() {
+export async function listarProdutos(restauranteId) {
   const resposta = await fetch(
-    `${API_URL}/produtos`
-  );
+  `${API_URL}/produtos?restauranteId=${restauranteId}`
+);
 
   return resposta.json();
 }
@@ -29,7 +29,7 @@ export async function buscarItemPorProduto(
   return itens[0];
 }
 
-export async function criarProduto(nome) {
+export async function criarProduto(nome, restauranteId) {
 
   const resposta = await fetch(
     `${API_URL}/produtos`,
@@ -40,6 +40,7 @@ export async function criarProduto(nome) {
       },
       body: JSON.stringify({
         nome,
+        restauranteId
       }),
     }
   );
@@ -51,7 +52,8 @@ export async function criarItem(
   produtoId,
   precoCompra,
   quantidadeCompra,
-  unidadeMedida
+  unidadeMedida,
+  restauranteId
 ) {
 
   const resposta = await fetch(
@@ -66,7 +68,8 @@ export async function criarItem(
         produtoId,
         precoCompra,
         quantidadeCompra,
-        unidadeMedida
+        unidadeMedida,
+        restauranteId
       })
     }
   );

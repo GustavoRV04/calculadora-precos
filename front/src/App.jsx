@@ -37,23 +37,23 @@ function App() {
 
       <hr />
 
-      <ProdutoForm />
+      <ProdutoForm restauranteAtivo={restauranteAtivo}/>
 
-        <hr />
+      <hr />
 
-        <ItemForm />
+      <ItemForm restauranteAtivo={restauranteAtivo}/>
 
-        <hr />
+      <hr />
 
-        <PratoForm />
+      <PratoForm restauranteAtivo={restauranteAtivo}/>
 
-        <hr />
+      <hr />
 
-        <PratoItemForm />
+      <PratoItemForm restauranteAtivo={restauranteAtivo}/>
 
-        <hr />
+      <hr />
 
-        <ResumoPrato />
+      <ResumoPrato restauranteAtivo={restauranteAtivo}/>
 
     </div>
   );
