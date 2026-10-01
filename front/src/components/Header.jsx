@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { criarRestaurante, listarRestaurantes, buscarRestaurantePorEmail } from "../services/restauranteService";
+import { criarRestaurante, listarRestaurantes, buscarRestaurantePorEmail, deletarRestaurante } from "../services/restauranteService";
 
 export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
   const [restaurantes, setRestaurantes] = useState([]);
@@ -7,8 +7,7 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
-  const [modoCadastro, setModoCadastro] =
-  useState(false);
+  const [modoCadastro, setModoCadastro] = useState(false);
   const [exibirFormulario, setExibirFormulario] = useState(false);
 
   async function carregarRestaurantes() {
@@ -21,67 +20,64 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
   }, []);
 
   async function handleCadastrar() {
-
-    if (
-      !nome.trim() ||
-      !email.trim() ||
-      !senha.trim()
-    ) {
-      alert(
-        "Preencha todos os campos"
-      );
-
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
+      alert("Preencha todos os campos");
       return;
     }
 
-    const criado =
-      await criarRestaurante(
-        nome,
-        email,
-        senha
-      );
-
-    setRestauranteAtivo(
-      criado.id
+    // Verifica se já existe um restaurante com o mesmo nome (case insensitive)
+    const nomeExiste = restaurantes.some(
+      (r) => r.nome.trim().toLowerCase() === nome.trim().toLowerCase()
     );
 
-    alert(
-      "Restaurante cadastrado!"
-    );
+    if (nomeExiste) {
+      alert("Já existe um comércio cadastrado com este nome. Escolha um nome diferente para a franquia/unidade.");
+      return;
+    }
 
+    const criado = await criarRestaurante(nome, email, senha);
+    setRestauranteAtivo(criado.id);
+    await carregarRestaurantes();
+    setExibirFormulario(false);
+    alert("Restaurante cadastrado!");
   }
 
   async function handleEntrar() {
-
-    const restaurante =
-      await buscarRestaurantePorEmail(
-        email
-      );
+    const restaurante = await buscarRestaurantePorEmail(email);
 
     if (!restaurante) {
-
       alert("Restaurante não encontrado");
-
       return;
     }
 
-    if (
-      restaurante.senha !== senha
-    ) {
-
+    if (restaurante.senha !== senha) {
       alert("Senha inválida");
-
       return;
     }
 
-    setRestauranteAtivo(
-      restaurante.id
-    );
+    setRestauranteAtivo(restaurante.id);
+    setExibirFormulario(false);
+    alert(`Bem-vindo ${restaurante.nome}`);
+  }
 
-    alert(
-    `Bem-vindo ${restaurante.nome}`
-    );
+  async function handleDeletar() {
+    if (!restauranteAtivo) {
+      alert("Nenhum comércio selecionado para excluir.");
+      return;
+    }
 
+    const confirmado = window.confirm("Tens a certeza que queres eliminar este comércio?");
+    if (!confirmado) return;
+
+    const sucesso = await deletarRestaurante(restauranteAtivo);
+    if (sucesso) {
+      alert("Comércio eliminado com sucesso!");
+      setRestauranteAtivo("");
+      await carregarRestaurantes();
+      setExibirFormulario(false);
+    } else {
+      alert("Erro ao eliminar o comércio.");
+    }
   }
 
   return (
@@ -112,103 +108,81 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
           className="btn-novo" 
           onClick={() => setExibirFormulario(!exibirFormulario)}
         >
-          {exibirFormulario ? "Cancelar" : "Entrar"}
+          {exibirFormulario ? "Cancelar" : "Entrar / Gerir"}
         </button>
       </div>
 
       {exibirFormulario && (
-
-        <div className="restaurante-form-inline">
-
-          <div>
-
+        <div className="restaurante-form-inline" style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <button
-              onClick={() =>
-                setModoCadastro(false)
-              }
+              onClick={() => setModoCadastro(false)}
+              style={{ backgroundColor: !modoCadastro ? "#4f46e5" : "#64748b" }}
             >
               Entrar
             </button>
 
             <button
-              onClick={() =>
-                setModoCadastro(true)
-              }
+              onClick={() => setModoCadastro(true)}
+              style={{ backgroundColor: modoCadastro ? "#4f46e5" : "#64748b" }}
             >
               Cadastrar
             </button>
 
+            {restauranteAtivo && (
+              <button
+                onClick={handleDeletar}
+                style={{ backgroundColor: "#dc2626", color: "#ffffff", marginLeft: "auto" }}
+              >
+                Deletar Comércio
+              </button>
+            )}
           </div>
 
           {modoCadastro ? (
-
-            <>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <input
                 type="text"
-                placeholder="Nome"
+                placeholder="Nome do Comércio"
                 value={nome}
-                onChange={(e) =>
-                  setNome(e.target.value)
-                }
+                onChange={(e) => setNome(e.target.value)}
               />
-
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="Email (pode ser o mesmo para várias unidades)"
                 value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
+                onChange={(e) => setEmail(e.target.value)}
               />
-
               <input
                 type="password"
                 placeholder="Senha"
                 value={senha}
-                onChange={(e) =>
-                  setSenha(e.target.value)
-                }
+                onChange={(e) => setSenha(e.target.value)}
               />
-
-              <button
-                onClick={handleCadastrar}
-              >
-                Cadastrar
+              <button onClick={handleCadastrar}>
+                Salvar Cadastro
               </button>
-            </>
-
+            </div>
           ) : (
-
-            <>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
+                onChange={(e) => setEmail(e.target.value)}
               />
-
               <input
                 type="password"
                 placeholder="Senha"
                 value={senha}
-                onChange={(e) =>
-                  setSenha(e.target.value)
-                }
+                onChange={(e) => setSenha(e.target.value)}
               />
-
-              <button
-                onClick={handleEntrar}
-              >
-                Entrar
+              <button onClick={handleEntrar}>
+                Entrar no Comércio
               </button>
-            </>
-
+            </div>
           )}
-
         </div>
-
       )}
     </header>
   );

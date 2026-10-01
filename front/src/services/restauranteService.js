@@ -31,7 +31,6 @@ export async function criarRestaurante(
 export async function buscarRestaurantePorEmail(
   email
 ) {
-
   const resposta = await fetch(
     `${API_URL}/restaurantes?email=${email}`
   );
@@ -39,4 +38,15 @@ export async function buscarRestaurantePorEmail(
   const dados = await resposta.json();
 
   return dados[0];
+}
+
+export async function deletarRestaurante(id) {
+  const resposta = await fetch(
+    `${API_URL}/restaurantes/${id}`,
+    {
+      method: "DELETE"
+    }
+  );
+
+  return resposta.ok;
 }

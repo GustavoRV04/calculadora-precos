@@ -2,28 +2,23 @@
   "produtos": [
     {
       "id": "1",
-      "nome": "Tomate",
-      "restauranteId": "BI7_pSV9Z0U"
+      "nome": "Tomate"
     },
     {
       "id": "2",
-      "nome": "Queijo",
-      "restauranteId": "BI7_pSV9Z0U"
+      "nome": "Queijo"
     },
     {
       "nome": "Alface",
-      "id": "sEeepWMMID8",
-      "restauranteId": "BI7_pSV9Z0U"
+      "id": "sEeepWMMID8"
     },
     {
       "nome": "Peito de frango",
-      "id": "-W6I-n84Kbk",
-      "restauranteId": "BI7_pSV9Z0U"
+      "id": "-W6I-n84Kbk"
     },
     {
       "nome": "Pão",
-      "id": "sMA0ZIbFC0g",
-      "restauranteId": "BI7_pSV9Z0U"
+      "id": "sMA0ZIbFC0g"
     }
   ],
   "itens": [
@@ -102,10 +97,10 @@
   ],
   "restaurantes": [
     {
-      "nome": "teste",
-      "email": "teste@gmailcom",
-      "senha": "teste123",
-      "id": "BI7_pSV9Z0U"
+      "nome": "Ratatouille",
+      "email": "ratatouille@email.com",
+      "senha": "123",
+      "id": "JoG5pkTBPEc"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
