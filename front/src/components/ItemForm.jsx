@@ -22,6 +22,11 @@ export default function ItemForm({
     setQuantidadeCompra
   ] = useState("");
 
+  const [
+    unidadeMedida,
+    setUnidadeMedida
+  ] = useState("G");
+
   useEffect(() => {
 
     if (!restauranteAtivo) return;
@@ -50,7 +55,8 @@ export default function ItemForm({
       produtoId,
       Number(precoCompra.replace(",", ".")),
       Number(quantidadeCompra),
-      "G"
+      unidadeMedida,
+      restauranteAtivo
     );
 
     alert("Item cadastrado!");
@@ -92,7 +98,7 @@ export default function ItemForm({
 
       <input
         type="number"
-        placeholder="Quantidade (g)"
+        placeholder="Quantidade Comprada"
         value={quantidadeCompra}
         onChange={(e) =>
           setQuantidadeCompra(
@@ -102,6 +108,35 @@ export default function ItemForm({
       />
 
       <br /><br />
+
+      <select
+        value={unidadeMedida}
+        onChange={(e) =>
+          setUnidadeMedida(e.target.value)
+        }
+      >
+
+        <option value="G">
+          Gramas (G)
+        </option>
+
+        <option value="KG">
+          Quilogramas (KG)
+        </option>
+
+        <option value="ML">
+          Mililitros (ML)
+        </option>
+
+        <option value="L">
+          Litros (L)
+        </option>
+
+        <option value="UN">
+          Unidade (UN)
+        </option>
+
+      </select>
 
       <button onClick={salvar}>
         Salvar
