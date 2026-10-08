@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { criarRestaurante, listarRestaurantes, buscarRestaurantePorEmail, deletarRestaurante } from "../services/restauranteService";
+import { criarRestaurante, listarRestaurantes, buscarRestaurantePorEmail, deletarRestaurante, atualizarRestaurante } from "../services/restauranteService";
 
 export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
   const [restaurantes, setRestaurantes] = useState([]);
@@ -7,7 +7,7 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
-  const [modoCadastro, setModoCadastro] = useState(false);
+  const [modo, setModo] = useState("entrar"); // "entrar", "cadastrar", "editar"
   const [exibirFormulario, setExibirFormulario] = useState(false);
 
   async function carregarRestaurantes() {
@@ -19,19 +19,29 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
     carregarRestaurantes();
   }, []);
 
+  function prepararEdicao() {
+    const atual = restaurantes.find((r) => r.id === restauranteAtivo);
+    if (atual) {
+      setNome(atual.nome);
+      setEmail(atual.email);
+      setSenha(atual.senha);
+    }
+    setModo("editar");
+    setExibirFormulario(true);
+  }
+
   async function handleCadastrar() {
     if (!nome.trim() || !email.trim() || !senha.trim()) {
       alert("Preencha todos os campos");
       return;
     }
 
-    // Verifica se já existe um restaurante com o mesmo nome (case insensitive)
     const nomeExiste = restaurantes.some(
       (r) => r.nome.trim().toLowerCase() === nome.trim().toLowerCase()
     );
 
     if (nomeExiste) {
-      alert("Já existe um comércio cadastrado com este nome. Escolha um nome diferente para a franquia/unidade.");
+      alert("Já existe um comércio cadastrado com este nome. Escolha um nome diferente.");
       return;
     }
 
@@ -40,6 +50,31 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
     await carregarRestaurantes();
     setExibirFormulario(false);
     alert("Restaurante cadastrado!");
+  }
+
+  async function handleEditar() {
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
+      alert("Preencha todos os campos");
+      return;
+    }
+
+    const nomeExiste = restaurantes.some(
+      (r) => r.id !== restauranteAtivo && r.nome.trim().toLowerCase() === nome.trim().toLowerCase()
+    );
+
+    if (nomeExiste) {
+      alert("Já existe outro comércio cadastrado com este nome.");
+      return;
+    }
+
+    const sucesso = await atualizarRestaurante(restauranteAtivo, { nome, email, senha });
+    if (sucesso) {
+      await carregarRestaurantes();
+      setExibirFormulario(false);
+      alert("Comércio atualizado com sucesso!");
+    } else {
+      alert("Erro ao atualizar o comércio.");
+    }
   }
 
   async function handleEntrar() {
@@ -106,7 +141,10 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
 
         <button 
           className="btn-novo" 
-          onClick={() => setExibirFormulario(!exibirFormulario)}
+          onClick={() => {
+            setModo("entrar");
+            setExibirFormulario(!exibirFormulario);
+          }}
         >
           {exibirFormulario ? "Cancelar" : "Entrar / Gerir"}
         </button>
@@ -114,20 +152,34 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
 
       {exibirFormulario && (
         <div className="restaurante-form-inline" style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
             <button
-              onClick={() => setModoCadastro(false)}
-              style={{ backgroundColor: !modoCadastro ? "#4f46e5" : "#64748b" }}
+              onClick={() => setModo("entrar")}
+              style={{ backgroundColor: modo === "entrar" ? "#4f46e5" : "#64748b" }}
             >
               Entrar
             </button>
 
             <button
-              onClick={() => setModoCadastro(true)}
-              style={{ backgroundColor: modoCadastro ? "#4f46e5" : "#64748b" }}
+              onClick={() => {
+                setNome("");
+                setEmail("");
+                setSenha("");
+                setModo("cadastrar");
+              }}
+              style={{ backgroundColor: modo === "cadastrar" ? "#4f46e5" : "#64748b" }}
             >
               Cadastrar
             </button>
+
+            {restauranteAtivo && (
+              <button
+                onClick={prepararEdicao}
+                style={{ backgroundColor: modo === "editar" ? "#4f46e5" : "#64748b" }}
+              >
+                Editar
+              </button>
+            )}
 
             {restauranteAtivo && (
               <button
@@ -139,7 +191,7 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
             )}
           </div>
 
-          {modoCadastro ? (
+          {modo === "cadastrar" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <input
                 type="text"
@@ -163,7 +215,35 @@ export default function Header({ restauranteAtivo, setRestauranteAtivo }) {
                 Salvar Cadastro
               </button>
             </div>
-          ) : (
+          )}
+
+          {modo === "editar" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <input
+                type="text"
+                placeholder="Novo Nome do Comércio"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+              />
+              <input
+                type="email"
+                placeholder="Novo Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Nova Senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+              />
+              <button onClick={handleEditar} style={{ backgroundColor: "#0284c7" }}>
+                Salvar Alterações
+              </button>
+            </div>
+          )}
+
+          {modo === "entrar" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <input
                 type="email"
