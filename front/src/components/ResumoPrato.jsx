@@ -3,136 +3,96 @@ import { useEffect, useState } from "react";
 import {
   listarPratos,
   calcularPrato,
-  obterIngredientesDoPrato
+  obterIngredientesDoPrato,
 } from "../services/pratoService";
 
-import {
-  buscarProduto
-} from "../services/produtoService";
+import { buscarProdutoPorItem } from "../services/produtoService";
 
 export default function ResumoPrato() {
+  const [pratos, setPratos] = useState([]);
 
-  const [pratos, setPratos] =
-    useState([]);
+  const [pratoId, setPratoId] = useState("");
 
-  const [pratoId, setPratoId] =
-    useState("");
+  const [ingredientes, setIngredientes] = useState([]);
 
-  const [ingredientes, setIngredientes] =
-    useState([]);
-
-  const [custoTotal, setCustoTotal] =
-    useState(0);
+  const [custoTotal, setCustoTotal] = useState(0);
 
   useEffect(() => {
-
     async function carregar() {
-
-      const lista =
-        await listarPratos();
+      const lista = await listarPratos();
 
       setPratos(lista);
 
       if (lista.length > 0) {
         setPratoId(lista[0].id);
       }
-
     }
 
     carregar();
-
   }, []);
 
   useEffect(() => {
-
     if (!pratoId) return;
 
     async function atualizar() {
+      const itens = await obterIngredientesDoPrato(pratoId);
+      console.log("itens no resumo: ", itens);
 
-      const itens =
-        await obterIngredientesDoPrato(
-          pratoId
-        );
+      const itensComNome = await Promise.all(
+        itens.map(async (item) => {
+          const produto = await buscarProdutoPorItem(item.item);
+          //aqui ele pega o id do item e não do produto
+          //      produto = {
+          //     "id": 4,
+          //     "quantidade": "20.000",
+          //     "prato": 1,
+          //     "item": 2 -> esse cara e o id do item, precisa buscar o item do id 2 e pegar a prop de id de produto
+          //      }
 
-      const itensComNome =
-        await Promise.all(
-          itens.map(async (item) => {
+          console.log("produto encontrado: ", produto);
 
-            const produto =
-              await buscarProduto(
-                item.produtoId
-              );
-
-            return {
-              ...item,
-              nomeProduto:
-                produto.nome
-            };
-
-          })
-        );
-
-      setIngredientes(
-        itensComNome
+          return {
+            ...item,
+            nomeProduto: produto.nome,
+          };
+        }),
       );
 
-      const total =
-        await calcularPrato(
-          pratoId
-        );
+      setIngredientes(itensComNome);
+
+      const total = await calcularPrato(pratoId);
 
       setCustoTotal(total);
-
     }
 
     atualizar();
-
   }, [pratoId]);
+
+  console.log("ingredientes: ", ingredientes);
 
   return (
     <div>
-
       <h2>Resumo do Prato</h2>
 
-      <select
-        value={pratoId}
-        onChange={(e) =>
-          setPratoId(
-            e.target.value
-          )
-        }
-      >
-        {pratos.map(prato => (
-          <option
-            key={prato.id}
-            value={prato.id}
-          >
+      <select value={pratoId} onChange={(e) => setPratoId(e.target.value)}>
+        {pratos.map((prato) => (
+          <option key={prato.id} value={prato.id}>
             {prato.nome}
           </option>
         ))}
       </select>
 
       <ul>
-
-        {ingredientes.map(item => (
-
+        {ingredientes.map((item) => (
           <li key={item.id}>
-
             {item.nomeProduto}
             {" - "}
-            {item.quantidadeUtilizada}g
-
+            {item.quantidade}g
           </li>
-
         ))}
-
       </ul>
 
-      <h3>
-        Custo Total:
-        R$ {custoTotal}
-      </h3>
-
+      <h3>Custo Total: R$ {custoTotal}</h3>
     </div>
   );
 }

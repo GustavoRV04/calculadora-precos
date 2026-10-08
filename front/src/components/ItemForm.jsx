@@ -1,42 +1,29 @@
 import { useEffect, useState } from "react";
-import {
-  listarProdutos,
-  criarItem,
-} from "../services/produtoService";
+import { listarProdutos, criarItem } from "../services/produtoService";
 
-export default function ItemForm({
-  restauranteAtivo
-}) {
+export default function ItemForm({ restauranteAtivo }) {
+  const [produtos, setProdutos] = useState([]);
+  const [produtoId, setProdutoId] = useState("");
+  const [precoCompra, setPrecoCompra] = useState("");
+  const [quantidadeCompra, setQuantidadeCompra] = useState("");
+  const [unidadeMedida, setUnidadeMedida] = useState("G");
 
-  const [produtos, setProdutos] =
-    useState([]);
+  // useEffect(() => {
+  //   if (!restauranteAtivo) return;
+  //   async function carregar() {
+  //     const dados = await listarProdutos(restauranteAtivo);
 
-  const [produtoId, setProdutoId] =
-    useState("");
+  //     setProdutos(dados);
 
-  const [precoCompra, setPrecoCompra] =
-    useState("");
-
-  const [
-    quantidadeCompra,
-    setQuantidadeCompra
-  ] = useState("");
-
-  const [
-    unidadeMedida,
-    setUnidadeMedida
-  ] = useState("G");
-
+  //     if (dados.length > 0) {
+  //       setProdutoId(dados[0].id);
+  //     }
+  //   }
+  //   carregar();
+  // }, [restauranteAtivo]);
   useEffect(() => {
-
-    if (!restauranteAtivo) return;
-
     async function carregar() {
-
-      const dados =
-        await listarProdutos(
-          restauranteAtivo
-        );
+      const dados = await listarProdutos();
 
       setProdutos(dados);
 
@@ -44,19 +31,16 @@ export default function ItemForm({
         setProdutoId(dados[0].id);
       }
     }
-
     carregar();
-
-  }, [restauranteAtivo]);
+  }, []);
 
   async function salvar() {
-
     await criarItem(
       produtoId,
       Number(precoCompra.replace(",", ".")),
       Number(quantidadeCompra),
       unidadeMedida,
-      restauranteAtivo
+      restauranteAtivo,
     );
 
     alert("Item cadastrado!");
@@ -64,84 +48,55 @@ export default function ItemForm({
 
   return (
     <div>
-
       <h2>Registrar Compra</h2>
 
-      <select
-        value={produtoId}
-        onChange={(e) =>
-          setProdutoId(e.target.value)
-        }
-      >
-        {produtos.map(produto => (
-          <option
-            key={produto.id}
-            value={produto.id}
-          >
+      <select value={produtoId} onChange={(e) => setProdutoId(e.target.value)}>
+        {produtos.map((produto) => (
+          <option key={produto.id} value={produto.id}>
             {produto.nome}
           </option>
         ))}
       </select>
 
-      <br /><br />
+      <br />
+      <br />
 
       <input
         type="number"
         placeholder="Preço"
         value={precoCompra}
-        onChange={(e) =>
-          setPrecoCompra(e.target.value)
-        }
+        onChange={(e) => setPrecoCompra(e.target.value)}
       />
 
-      <br /><br />
+      <br />
+      <br />
 
       <input
         type="number"
         placeholder="Quantidade Comprada"
         value={quantidadeCompra}
-        onChange={(e) =>
-          setQuantidadeCompra(
-            e.target.value
-          )
-        }
+        onChange={(e) => setQuantidadeCompra(e.target.value)}
       />
 
-      <br /><br />
+      <br />
+      <br />
 
       <select
         value={unidadeMedida}
-        onChange={(e) =>
-          setUnidadeMedida(e.target.value)
-        }
+        onChange={(e) => setUnidadeMedida(e.target.value)}
       >
+        <option value="G">Gramas (G)</option>
 
-        <option value="G">
-          Gramas (G)
-        </option>
+        <option value="KG">Quilogramas (KG)</option>
 
-        <option value="KG">
-          Quilogramas (KG)
-        </option>
+        <option value="ML">Mililitros (ML)</option>
 
-        <option value="ML">
-          Mililitros (ML)
-        </option>
+        <option value="L">Litros (L)</option>
 
-        <option value="L">
-          Litros (L)
-        </option>
-
-        <option value="UN">
-          Unidade (UN)
-        </option>
-
+        <option value="UN">Unidade (UN)</option>
       </select>
 
-      <button onClick={salvar}>
-        Salvar
-      </button>
-
+      <button onClick={salvar}>Salvar</button>
     </div>
   );
 }
