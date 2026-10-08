@@ -25,7 +25,7 @@
 
 > Descreva brevemente quais funcionalidades ou resultados foram concluídos e estão funcionando ao final da sprint.
 
-**Resultado: Conseguimos implementar quase todas as features planejadas a tempo, Faltando somente a vinculação do Back aos Endpoints do sistema**
+**Resultado: Conseguimos implementar quase todas as features planejadas a tempo, Faltando somente a conclusão de alguns Endpoints do Back e a vinculação do projeto ao Banco de dados que já **
 
 ### Principal dificuldade ou impedimento
 
@@ -92,13 +92,13 @@
 
 > O que precisa mudar na próxima sprint?
 
-**Registro: O planejamento da sprint**
+**Registro: A organização do quadro Kanban**
 
 ### Agir
 
 > Qual ação concreta a equipe adotará na próxima sprint?
 
-**Ação: Desenvolver um protótipo mais funcional**
+**Ação: Integrar o banco a branch principal**
 
 ---
 
@@ -114,10 +114,10 @@
 
 | User Story ou item | Responsável(is), se definido(s) | Resultado esperado |
 |---|---|---|
-| US03 Cadastro de restaurante| Patric, Gustavo |  |  |
-| US04 Adicionar outras unidades de medida | Gustavo, Rene | |  |
-| US05 Implementar endpoints no backend | Felipe, Rene  |  |  |
-| US06 Implementar o banco de dados| Patric, Gustavo |  |  |
+| US05 Concluir endpoints no backend | Felipe, Rene  | Realizar as requisições no Vercel |  
+| US06 Concluir a Implementação do banco| Felipe, Rene | Ver os registros no Vercel |  
+| US09 Melhorar Front (Estética e Usabilidade)| Patric, Gustavo | Polir o front de forma geral |
+| US10 Crud completo dos registros| Patric, Gustavo | O usuário vai poder excluir/editar uma informação |
 
 > Esta é uma seleção inicial. O planejamento poderá ser ajustado pela equipe no início da próxima sprint.
 
