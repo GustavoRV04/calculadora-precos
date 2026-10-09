@@ -22,8 +22,28 @@
     },
     {
       "nome": "Carne",
-      "restauranteId": "JoG5pkTBPEc",
+      "restauranteId": null,
       "id": "LJyiNnqYNxI"
+    },
+    {
+      "nome": "Queijo",
+      "restauranteId": "jgo8FvA-dzw",
+      "id": "K-hJ5JRPcNU"
+    },
+    {
+      "nome": "",
+      "restauranteId": "jgo8FvA-dzw",
+      "id": "XX0ZAKlZlo4"
+    },
+    {
+      "nome": "",
+      "restauranteId": "jgo8FvA-dzw",
+      "id": "fLvr_RSJJ8o"
+    },
+    {
+      "nome": "",
+      "restauranteId": "jgo8FvA-dzw",
+      "id": "TSLwBh0thdc"
     }
   ],
   "itens": [
@@ -54,6 +74,14 @@
       "quantidadeCompra": 1000,
       "unidadeMedida": "G",
       "id": "aom4mbbd728"
+    },
+    {
+      "produtoId": "LJyiNnqYNxI",
+      "precoCompra": 0,
+      "quantidadeCompra": 0,
+      "unidadeMedida": "G",
+      "restauranteId": "jgo8FvA-dzw",
+      "id": "GTJPZs7qgLA"
     }
   ],
   "pratos": [
@@ -103,9 +131,15 @@
   "restaurantes": [
     {
       "nome": "Ratatouille",
-      "email": "ratatouille@email.com",
+      "email": "ratatouille@teste.com",
       "senha": "123",
-      "id": "JoG5pkTBPEc"
+      "id": "jgo8FvA-dzw"
+    },
+    {
+      "nome": "Grêmio Lanches",
+      "email": "gremiolanche@teste.com",
+      "senha": "123",
+      "id": "Q0ZYTJRcHOA"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

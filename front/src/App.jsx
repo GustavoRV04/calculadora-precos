@@ -27,7 +27,7 @@ function App() {
     <div>
 
       <h1>
-        Calculadora de Preços
+        Lucro Certo
       </h1>
 
       <Header 
