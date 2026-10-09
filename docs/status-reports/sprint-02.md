@@ -62,7 +62,7 @@
 
 - **Repositório: https://github.com/GustavoRV04/calculadora-precos.git**
 - **Quadro Kanban: https://trello.com/invite/b/6aac709fb57f9e29ac923112/ATTIff030c96f854d330cb5ae1e62851d5f95E80F25B/calculadora-de-precos**
-- **Deploy ou instruções para executar o projeto (https://calculadora-precos-kv2n5o5un-gu-rv.vercel.app/)**
+- **Deploy ou instruções para executar o projeto (https://calculadora-precos-nine.vercel.app/)**
 - **Outras evidências, se necessárias:**
 
 ### Checklist de qualidade
