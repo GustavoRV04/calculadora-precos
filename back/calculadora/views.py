@@ -21,7 +21,7 @@ class ItemViewSet(viewsets.ModelViewSet):
 
 
 class PratoViewSet(viewsets.ModelViewSet):
-    queryset = Prato.objects.all().prefetch_related('itens')
+    queryset = Prato.objects.all().prefetch_related('pratoitem_set__item__produto')
     serializer_class = PratoSerializer
 
 
