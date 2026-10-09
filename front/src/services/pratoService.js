@@ -1,27 +1,28 @@
 import API_URL from "./api";
+
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 
-export async function calcularPrato(pratoId) {
-  const resposta = await fetch(`${API_URL}/prato-itens?pratoId=${pratoId}`);
-  const prato = await fetch(`${API_URL}/pratos?pratoId=${pratoId}`);
-  const ingredientes = await resposta.json();
-
-  console.log(ingredientes);
-  console.log("prato: ", prato.body);
-  console.log("pratoID: ", pratoId);
+export async function calcularPrato(prato) {
   let total = 0;
 
-  for (const ingrediente of ingredientes) {
+  for (const pratoItem of prato?.prato_itens ?? []) {
     const custo = calcularCustoIngrediente(
-      ingrediente.precoCompra,
-      ingrediente.quantidadeCompra,
-      ingrediente.quantidadeUtilizada,
+      pratoItem.item.preco_custo,
+      pratoItem.item.quantidade_compra,
+      pratoItem.quantidade,
     );
 
     total += custo;
   }
 
   return total;
+}
+
+export async function pratoPorId(pratoId) {
+  const prato = await fetch(`${API_URL}/pratos/${pratoId}`);
+  const pratoObj = await prato.json();
+
+  return pratoObj;
 }
 
 export async function criarPrato(nome) {
@@ -48,7 +49,7 @@ export async function adicionarIngrediente(prato, item, quantidade) {
     },
     body: JSON.stringify({
       prato,
-      item,
+      item_id: item,
       quantidade,
     }),
   });
@@ -58,12 +59,6 @@ export async function adicionarIngrediente(prato, item, quantidade) {
 
 export async function listarPratos() {
   const resposta = await fetch(`${API_URL}/pratos`);
-
-  return resposta.json();
-}
-
-export async function obterIngredientesDoPrato(pratoId) {
-  const resposta = await fetch(`${API_URL}/prato-itens?pratoId=${pratoId}`);
 
   return resposta.json();
 }

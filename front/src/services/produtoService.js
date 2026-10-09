@@ -15,16 +15,14 @@ export async function listarProdutos() {
   const resposta = await fetch(`${API_URL}/produtos`);
   const produtos = await resposta.json();
 
-  console.log("todos os prod: ", produtos);
+  // console.log("todos os prod: ", produtos);
 
   return produtos;
 }
 
 export async function listarItens() {
-  //get Itens / Ingredientes
   const resposta = await fetch(`${API_URL}/itens`);
   const itens = await resposta.json();
-  console.log("todos os itens: ", itens);
 
   return itens;
 }
@@ -41,6 +39,7 @@ export async function buscarProdutoPorItem(produtoId) {
   const resposta = await fetch(`${API_URL}/produtos/${produtoId}`);
 
   const produtos = await resposta.json();
+  // console.log("produtos por item: ", produtos);
 
   return produtos;
 }
@@ -60,7 +59,7 @@ export async function criarProduto(nome) {
 }
 
 export async function criarItem(
-  produto,
+  produtoId,
   preco_custo,
   quantidade_compra,
   unidade_medida,
@@ -71,7 +70,7 @@ export async function criarItem(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      produto,
+      produto_id: produtoId,
       preco_custo,
       quantidade_compra,
       unidade_medida,

@@ -4,8 +4,7 @@ import { buscarProdutoPorItem, listarItens } from "../services/produtoService";
 
 export default function PratoItemForm() {
   const [pratos, setPratos] = useState([]);
-  // const [itens, setItens] = useState([]);
-  const [itemProdutos, setItemProdutos] = useState([]);
+  const [itens, setItens] = useState([]);
 
   const [pratoId, setPratoId] = useState("");
   const [itemId, setItemId] = useState("");
@@ -14,29 +13,19 @@ export default function PratoItemForm() {
   useEffect(() => {
     async function carregarDados() {
       const pratosData = await listarPratos();
-      const itensData = await listarItens();
-
-      const itemProdutosData = await Promise.all(
-        itensData.map(async (item) => {
-          const produtoData = await buscarProdutoPorItem(item.produto);
-
-          return {
-            ...produtoData,
-            itemId: item.id,
-          };
-        }),
-      );
-
-      setItemProdutos(itemProdutosData);
       setPratos(pratosData);
-      // setItens(itensData);
+
+      const itensData = await listarItens();
+      setItens(itensData);
+
+      console.log("todos os itens: ", itensData);
 
       if (pratosData.length > 0) {
         setPratoId(pratosData[0].id);
       }
 
-      if (itemProdutosData.length > 0) {
-        setItemId(itemProdutosData[0].id);
+      if (itensData.length > 0) {
+        setItemId(itensData[0].id);
       }
     }
 
@@ -55,7 +44,7 @@ export default function PratoItemForm() {
     setQuantidadeUtilizada("");
   }
 
-  console.log(itemProdutos);
+  // console.log(itemProdutos);
 
   return (
     <div>
@@ -64,7 +53,7 @@ export default function PratoItemForm() {
       <select value={pratoId} onChange={(e) => setPratoId(e.target.value)}>
         {pratos.map((prato) => (
           <option key={prato.id} value={prato.id}>
-            {prato.nome}
+            {prato?.nome}
           </option>
         ))}
       </select>
@@ -73,9 +62,9 @@ export default function PratoItemForm() {
       <br />
 
       <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-        {itemProdutos.map((item) => (
-          <option key={item.id} value={item.itemId}>
-            {item.nome}
+        {itens.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item?.produto?.nome}
           </option>
         ))}
       </select>

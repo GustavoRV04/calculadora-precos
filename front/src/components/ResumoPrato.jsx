@@ -3,17 +3,15 @@ import { useEffect, useState } from "react";
 import {
   listarPratos,
   calcularPrato,
-  obterIngredientesDoPrato,
+  pratoPorId,
 } from "../services/pratoService";
-
-import { buscarProdutoPorItem } from "../services/produtoService";
 
 export default function ResumoPrato() {
   const [pratos, setPratos] = useState([]);
 
   const [pratoId, setPratoId] = useState("");
 
-  const [ingredientes, setIngredientes] = useState([]);
+  const [prato, setPrato] = useState();
 
   const [custoTotal, setCustoTotal] = useState(0);
 
@@ -35,40 +33,16 @@ export default function ResumoPrato() {
     if (!pratoId) return;
 
     async function atualizar() {
-      const itens = await obterIngredientesDoPrato(pratoId);
-      console.log("itens no resumo: ", itens);
+      const prato = await pratoPorId(pratoId);
+      setPrato(prato);
 
-      const itensComNome = await Promise.all(
-        itens.map(async (item) => {
-          const produto = await buscarProdutoPorItem(item.item);
-          //aqui ele pega o id do item e não do produto
-          //      produto = {
-          //     "id": 4,
-          //     "quantidade": "20.000",
-          //     "prato": 1,
-          //     "item": 2 -> esse cara e o id do item, precisa buscar o item do id 2 e pegar a prop de id de produto
-          //      }
-
-          console.log("produto encontrado: ", produto);
-
-          return {
-            ...item,
-            nomeProduto: produto.nome,
-          };
-        }),
-      );
-
-      setIngredientes(itensComNome);
-
-      const total = await calcularPrato(pratoId);
+      const total = await calcularPrato(prato);
 
       setCustoTotal(total);
     }
 
     atualizar();
   }, [pratoId]);
-
-  console.log("ingredientes: ", ingredientes);
 
   return (
     <div>
@@ -83,11 +57,11 @@ export default function ResumoPrato() {
       </select>
 
       <ul>
-        {ingredientes.map((item) => (
-          <li key={item.id}>
-            {item.nomeProduto}
+        {prato?.prato_itens.map((pratoItem) => (
+          <li key={pratoItem.id}>
+            {pratoItem.item.produto.nome}
             {" - "}
-            {item.quantidade}g
+            {pratoItem.quantidade}g
           </li>
         ))}
       </ul>
