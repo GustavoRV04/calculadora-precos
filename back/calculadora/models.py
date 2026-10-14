@@ -1,8 +1,28 @@
+from django.conf import settings
 from django.db import models
 
 # Create your models here.
+class Restaurante(models.Model):
+    nome = models.CharField(max_length=100)
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="restaurante",
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.nome
+
+
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
+    restaurante = models.ForeignKey(
+        Restaurante,
+        on_delete=models.CASCADE,
+        related_name="produtos",
+    )
 
 class Item(models.Model):
     produto = models.ForeignKey(
@@ -19,6 +39,11 @@ class Item(models.Model):
 
 class Prato(models.Model):
     nome = models.CharField(max_length=100)
+    restaurante = models.ForeignKey(
+        Restaurante,
+        on_delete=models.CASCADE,
+        related_name="pratos",
+    )
     # margem_lucro_percentual = models.DecimalField(max_digits=5, decimal_places=2) # Ex: 30.00 para 30%
     itens = models.ManyToManyField(Item, through='PratoItem')
     

@@ -1,61 +1,18 @@
-import API_URL from "./api";
-
-//deixei comentado pois ainda não implementamos Restaurantes.
-// export async function listarProdutos(restauranteId) { //get produtos
-//   const resposta = await fetch(
-//     `${API_URL}/produtos?restauranteId=${restauranteId}`,
-//   );
-//   console.log("todos os prod: ", resposta);
-
-//   return resposta.json();
-// }
+import { requisicaoApi } from "./api";
 
 export async function listarProdutos() {
-  //get produtos
-  const resposta = await fetch(`${API_URL}/produtos`);
-  const produtos = await resposta.json();
-
-  // console.log("todos os prod: ", produtos);
-
-  return produtos;
+  return requisicaoApi("/produtos");
 }
 
 export async function listarItens() {
-  const resposta = await fetch(`${API_URL}/itens`);
-  const itens = await resposta.json();
-
-  return itens;
-}
-
-export async function buscarItemPorProduto(itemId) {
-  const resposta = await fetch(`${API_URL}/itens/${itemId}`);
-
-  const itens = await resposta.json();
-
-  return itens;
-}
-
-export async function buscarProdutoPorItem(produtoId) {
-  const resposta = await fetch(`${API_URL}/produtos/${produtoId}`);
-
-  const produtos = await resposta.json();
-  // console.log("produtos por item: ", produtos);
-
-  return produtos;
+  return requisicaoApi("/itens");
 }
 
 export async function criarProduto(nome) {
-  const resposta = await fetch(`${API_URL}/produtos`, {
+  return requisicaoApi("/produtos", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      nome,
-    }),
+    body: { nome },
   });
-
-  return resposta.json();
 }
 
 export async function criarItem(
@@ -64,18 +21,13 @@ export async function criarItem(
   quantidade_compra,
   unidade_medida,
 ) {
-  const resposta = await fetch(`${API_URL}/itens`, {
+  return requisicaoApi("/itens", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+    body: {
       produto_id: produtoId,
       preco_custo,
       quantidade_compra,
       unidade_medida,
-    }),
+    },
   });
-
-  return resposta.json();
 }

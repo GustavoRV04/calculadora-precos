@@ -1,66 +1,49 @@
-import API_URL from "./api";
+import { requisicaoApi } from "./api";
 
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 
-export async function calcularPrato(prato) {
-  let total = 0;
-
-  for (const pratoItem of prato?.prato_itens ?? []) {
+export function calcularPrato(prato) {
+  const total = (prato?.prato_itens ?? []).reduce((soma, pratoItem) => {
     const item = pratoItem.item;
-    if (!item) continue;
+    if (!item) return soma;
 
-    const custo = calcularCustoIngrediente(
+    return soma + calcularCustoIngrediente(
       item.preco_custo,
       item.quantidade_compra,
       pratoItem.quantidade,
       item.unidade_medida,
     );
-
-    total += custo;
-  }
+  }, 0);
 
   return Number(total.toFixed(2));
 }
 
 export async function pratoPorId(pratoId) {
-  const prato = await fetch(`${API_URL}/pratos/${pratoId}`);
-  const pratoObj = await prato.json();
-
-  return pratoObj;
+  return requisicaoApi(`/pratos/${pratoId}`);
 }
 
 export async function criarPrato(nome) {
-  const resposta = await fetch(`${API_URL}/pratos`, {
+  return requisicaoApi("/pratos", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      nome,
-    }),
+    body: { nome },
   });
-
-  return resposta.json();
 }
 
 export async function adicionarIngrediente(pratoId, itemId, quantidade) {
-  const resposta = await fetch(`${API_URL}/prato-itens`, {
+  return requisicaoApi("/prato-itens", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+    body: {
       prato_id: pratoId,
       item_id: itemId,
       quantidade,
-    }),
+    },
   });
-
-  return resposta.json();
 }
 
 export async function listarPratos() {
-  const resposta = await fetch(`${API_URL}/pratos`);
+  return requisicaoApi("/pratos");
+}
 
-  return resposta.json();
+export async function removerIngrediente(pratoItemId) {
+  return requisicaoApi(`/prato-itens/${pratoItemId}`, { method: "DELETE" });
 }

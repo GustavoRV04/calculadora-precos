@@ -17,7 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from calculadora.views import ItemViewSet, PratoItemViewSet, PratoViewSet, ProdutoViewSet
+from calculadora.views import (
+    CadastroRestauranteView,
+    ItemViewSet,
+    LoginRestauranteView,
+    PratoItemViewSet,
+    PratoViewSet,
+    ProdutoViewSet,
+)
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
@@ -34,6 +41,7 @@ router.register('prato-itens', PratoItemViewSet)
 
 urlpatterns = [
     path('adminsecreto-0jf093jf/', admin.site.urls),
+    path('api/v1/restaurantes', CadastroRestauranteView.as_view()),
+    path('api/v1/login', LoginRestauranteView.as_view()),
     path('api/v1/', include(router.urls)),
-    path("api/v1/login", obtain_auth_token),
 ]
