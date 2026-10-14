@@ -1,39 +1,14 @@
-# Executar o json server
+# Executar o front-end
 
-É importante ver que o json server e o react estão atualmente dentro da pasta "front"
+Na pasta `front`, instale as dependências e inicie o Vite:
 
-para acessar a pasta no termianal:
-''
-cd calculadora-precos-main/front
-``
-
-Primeiro, nessa pasta, é necessário instalar os pacotes
-
-```
+```sh
 npm install
-```
-para rodar:
-'''
-npm run / npm run dev
-'''
-
-se um erro ocorrer ao tentar rodar o comando acima tente instalar as dependencias com este comando:
-
-npm install -D @rolldown/binding-win32-x64-msvc
-'''
-
-Agora, para rodar o backend json-server, execute:
-```
-npx json-server db.json
+npm run dev
 ```
 
-tem 4 endpoints
+# Executar a API
 
-http://localhost:3000/produtos
-http://localhost:3000/itens
-http://localhost:3000/pratos
-http://localhost:3000/pratoItens
+Siga as instruções em [`../back/documentation.md`](../back/documentation.md) para iniciar o Django. A API local fica em `http://localhost:8000/api/v1`.
 
-Todos da para fazer um GET, um PUT, um DELETE (por id), e um POST
-
-O formato do retorno do GET, ou do payload do PUT ou POST é igual ao objeto dentro do arquivo `db.json`
+Os endpoints disponíveis são `produtos`, `itens`, `pratos` e `prato-itens`. O front pode apontar para outra API definindo `VITE_API_URL` no ambiente de build.

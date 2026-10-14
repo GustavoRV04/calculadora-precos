@@ -5,8 +5,9 @@ import {
   calcularPrato,
   pratoPorId,
 } from "../services/pratoService";
+import { unidadeBase } from "../utils/conversorMedidas";
 
-export default function ResumoPrato() {
+export default function ResumoPrato({ dataVersion }) {
   const [pratos, setPratos] = useState([]);
 
   const [pratoId, setPratoId] = useState("");
@@ -27,7 +28,7 @@ export default function ResumoPrato() {
     }
 
     carregar();
-  }, []);
+  }, [dataVersion]);
 
   useEffect(() => {
     if (!pratoId) return;
@@ -42,7 +43,7 @@ export default function ResumoPrato() {
     }
 
     atualizar();
-  }, [pratoId]);
+  }, [pratoId, dataVersion]);
 
   return (
     <div>
@@ -57,16 +58,16 @@ export default function ResumoPrato() {
       </select>
 
       <ul>
-        {prato?.prato_itens.map((pratoItem) => (
+        {prato?.prato_itens?.map((pratoItem) => (
           <li key={pratoItem.id}>
             {pratoItem.item.produto.nome}
             {" - "}
-            {pratoItem.quantidade}g
+            {pratoItem.quantidade} {unidadeBase(pratoItem.item.unidade_medida)}
           </li>
         ))}
       </ul>
 
-      <h3>Custo Total: R$ {custoTotal}</h3>
+      <h3>Custo Total: {custoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</h3>
     </div>
   );
 }

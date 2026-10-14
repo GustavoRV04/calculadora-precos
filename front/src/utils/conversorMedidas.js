@@ -1,3 +1,9 @@
+export function unidadeBase(unidade) {
+  if (unidade === "KG") return "G";
+  if (unidade === "L") return "ML";
+  return unidade;
+}
+
 export function converterParaBase(
   quantidade,
   unidade

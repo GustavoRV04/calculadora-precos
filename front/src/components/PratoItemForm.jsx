@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { listarPratos, adicionarIngrediente } from "../services/pratoService";
-import { buscarProdutoPorItem, listarItens } from "../services/produtoService";
+import { listarItens } from "../services/produtoService";
+import { unidadeBase } from "../utils/conversorMedidas";
 
-export default function PratoItemForm() {
+export default function PratoItemForm({ dataVersion, onSaved }) {
   const [pratos, setPratos] = useState([]);
   const [itens, setItens] = useState([]);
 
@@ -30,15 +31,20 @@ export default function PratoItemForm() {
     }
 
     carregarDados();
-  }, []);
+  }, [dataVersion]);
+
+  const itemSelecionado = itens.find((item) => String(item.id) === String(itemId));
 
   async function salvar() {
+    if (!pratoId || !itemId || !quantidadeUtilizada) return;
+
     await adicionarIngrediente(
       pratoId,
       Number(itemId),
       Number(quantidadeUtilizada),
     );
 
+    onSaved?.();
     alert("Ingrediente adicionado!");
 
     setQuantidadeUtilizada("");
@@ -64,7 +70,7 @@ export default function PratoItemForm() {
       <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
         {itens.map((item) => (
           <option key={item.id} value={item.id}>
-            {item?.produto?.nome}
+            {item?.produto?.nome} ({item.quantidade_compra} {item.unidade_medida} por R$ {item.preco_custo})
           </option>
         ))}
       </select>
@@ -72,9 +78,15 @@ export default function PratoItemForm() {
       <br />
       <br />
 
+      <label htmlFor="quantidade-utilizada">
+        Quantidade utilizada ({unidadeBase(itemSelecionado?.unidade_medida) ?? "unidade"})
+      </label>
       <input
+        id="quantidade-utilizada"
         type="number"
-        placeholder="Quantidade utilizada (g)"
+        min="0.001"
+        step="0.001"
+        placeholder="Quantidade"
         value={quantidadeUtilizada}
         onChange={(e) => setQuantidadeUtilizada(e.target.value)}
       />

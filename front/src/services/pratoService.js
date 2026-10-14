@@ -6,16 +6,20 @@ export async function calcularPrato(prato) {
   let total = 0;
 
   for (const pratoItem of prato?.prato_itens ?? []) {
+    const item = pratoItem.item;
+    if (!item) continue;
+
     const custo = calcularCustoIngrediente(
-      pratoItem.item.preco_custo,
-      pratoItem.item.quantidade_compra,
+      item.preco_custo,
+      item.quantidade_compra,
       pratoItem.quantidade,
+      item.unidade_medida,
     );
 
     total += custo;
   }
 
-  return total;
+  return Number(total.toFixed(2));
 }
 
 export async function pratoPorId(pratoId) {
@@ -39,17 +43,15 @@ export async function criarPrato(nome) {
   return resposta.json();
 }
 
-export async function adicionarIngrediente(prato, item, quantidade) {
-  //aqui o id do item vem 6 que é o id do produto, preciso do id do item.
-
+export async function adicionarIngrediente(pratoId, itemId, quantidade) {
   const resposta = await fetch(`${API_URL}/prato-itens`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      prato,
-      item_id: item,
+      prato_id: pratoId,
+      item_id: itemId,
       quantidade,
     }),
   });

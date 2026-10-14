@@ -2,14 +2,16 @@ import { useState } from "react";
 import { criarPrato }
 from "../services/pratoService";
 
-export default function PratoForm() {
+export default function PratoForm({ onSaved }) {
 
   const [nome, setNome] =
     useState("");
 
   async function salvar() {
+    if (!nome.trim()) return;
 
     await criarPrato(nome);
+    onSaved?.();
 
     alert("Prato cadastrado!");
 

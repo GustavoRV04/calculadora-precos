@@ -15,7 +15,7 @@ class Item(models.Model):
     quantidade_compra = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantidade comprada do prato")
 
     def __str__(self):
-        return self.nome
+        return self.produto.nome
 
 class Prato(models.Model):
     nome = models.CharField(max_length=100)
@@ -31,4 +31,4 @@ class PratoItem(models.Model):
     quantidade = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantidade usada na receita")
 
     def __str__(self):
-        return f"{self.quantidade} {self.item.unidade_medida} de {self.item.nome} em {self.prato.nome}"
+        return f"{self.quantidade} {self.item.unidade_medida} de {self.item.produto.nome} em {self.prato.nome}"

@@ -1,13 +1,19 @@
+import { converterParaBase } from "./conversorMedidas.js";
+
 export function calcularCustoIngrediente(
   precoCompra,
   quantidadeCompra,
-  quantidadeUtilizada
+  quantidadeUtilizada,
+  unidadeCompra = "G",
 ) {
-  const valorUnitario =
-    precoCompra / quantidadeCompra;
+  const quantidadeTotal = converterParaBase(
+    Number(quantidadeCompra),
+    unidadeCompra,
+  );
 
-  const total =
-    valorUnitario * quantidadeUtilizada;
+  if (!quantidadeTotal) return 0;
 
-  return Number(total.toFixed(2));
+  return (
+    (Number(precoCompra) / quantidadeTotal) * Number(quantidadeUtilizada)
+  );
 }

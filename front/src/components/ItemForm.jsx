@@ -1,26 +1,13 @@
 import { useEffect, useState } from "react";
 import { listarProdutos, criarItem } from "../services/produtoService";
 
-export default function ItemForm({ restauranteAtivo }) {
+export default function ItemForm({ dataVersion, onSaved }) {
   const [produtos, setProdutos] = useState([]);
   const [produtoId, setProdutoId] = useState("");
   const [precoCompra, setPrecoCompra] = useState("");
   const [quantidadeCompra, setQuantidadeCompra] = useState("");
   const [unidadeMedida, setUnidadeMedida] = useState("G");
 
-  // useEffect(() => {
-  //   if (!restauranteAtivo) return;
-  //   async function carregar() {
-  //     const dados = await listarProdutos(restauranteAtivo);
-
-  //     setProdutos(dados);
-
-  //     if (dados.length > 0) {
-  //       setProdutoId(dados[0].id);
-  //     }
-  //   }
-  //   carregar();
-  // }, [restauranteAtivo]);
   useEffect(() => {
     async function carregar() {
       const dados = await listarProdutos();
@@ -32,18 +19,22 @@ export default function ItemForm({ restauranteAtivo }) {
       }
     }
     carregar();
-  }, []);
+  }, [dataVersion]);
 
   async function salvar() {
+    if (!produtoId || !precoCompra || !quantidadeCompra) return;
+
     await criarItem(
       produtoId,
       Number(precoCompra.replace(",", ".")),
       Number(quantidadeCompra),
       unidadeMedida,
-      restauranteAtivo,
     );
 
+    onSaved?.();
     alert("Item cadastrado!");
+    setPrecoCompra("");
+    setQuantidadeCompra("");
   }
 
   return (

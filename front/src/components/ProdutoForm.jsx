@@ -1,20 +1,14 @@
 import { useState } from "react";
 import { criarProduto } from "../services/produtoService";
 
-export default function ProdutoForm() {
+export default function ProdutoForm({ onSaved }) {
   const [nome, setNome] = useState("");
 
   async function salvar() {
-    // if (!restauranteAtivo) {
-
-    //   alert(
-    //     "Selecione um restaurante"
-    //   );
-
-    //   return;
-    // }
+    if (!nome.trim()) return;
 
     await criarProduto(nome);
+    onSaved?.();
 
     alert("Produto cadastrado!");
 

@@ -26,10 +26,16 @@ class PratoItemSerializer(serializers.ModelSerializer):
         queryset=Item.objects.all(),
         write_only=True
     )
+    prato = serializers.PrimaryKeyRelatedField(read_only=True)
+    prato_id = serializers.PrimaryKeyRelatedField(
+        source='prato',
+        queryset=Prato.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = PratoItem
-        fields = '__all__'
+        fields = ['id', 'prato', 'prato_id', 'item', 'item_id', 'quantidade']
 
 class PratoSerializer(serializers.ModelSerializer):
     prato_itens = PratoItemSerializer(

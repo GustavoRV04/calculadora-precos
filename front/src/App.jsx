@@ -22,6 +22,8 @@ from "./components/ResumoPrato";
 function App() {
 
   const [restauranteAtivo, setRestauranteAtivo] = useState("");
+  const [dataVersion, setDataVersion] = useState(0);
+  const atualizarDados = () => setDataVersion((version) => version + 1);
 
   return (
     <div>
@@ -37,23 +39,23 @@ function App() {
 
       <hr />
 
-      <ProdutoForm restauranteAtivo={restauranteAtivo}/>
+      <ProdutoForm restauranteAtivo={restauranteAtivo} onSaved={atualizarDados}/>
 
       <hr />
 
-      <ItemForm restauranteAtivo={restauranteAtivo}/>
+      <ItemForm restauranteAtivo={restauranteAtivo} dataVersion={dataVersion} onSaved={atualizarDados}/>
 
       <hr />
 
-      <PratoForm restauranteAtivo={restauranteAtivo}/>
+      <PratoForm restauranteAtivo={restauranteAtivo} onSaved={atualizarDados}/>
 
       <hr />
 
-      <PratoItemForm restauranteAtivo={restauranteAtivo}/>
+      <PratoItemForm restauranteAtivo={restauranteAtivo} dataVersion={dataVersion} onSaved={atualizarDados}/>
 
       <hr />
 
-      <ResumoPrato restauranteAtivo={restauranteAtivo}/>
+      <ResumoPrato restauranteAtivo={restauranteAtivo} dataVersion={dataVersion}/>
 
     </div>
   );
