@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-2eqfo@zr0n!7x^eh%^_%_xokau3=hnu0n95r1s#5sdkf-j)&74
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["calculadora-precos-jhsx.vercel.app"]
 
 
 # Application definition
