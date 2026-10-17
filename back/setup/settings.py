@@ -82,19 +82,21 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Busca a variável correta gerada pelo Vercel
 DATABASE_URL = os.environ.get('POSTGRES_URL')
 
+# 1. Obter a variável NON_POOLING que é a ideal para executar o comando migrate
+db_url = os.environ.get('POSTGRES_URL_NON_POOLING', '')
+
+# 2. Limpar os parâmetros extra adicionados pelo Vercel/Supabase
+# Cortamos a string no '?' para ignorar os parâmetros e evitar o erro no psycopg2
+if '?' in db_url:
+    db_url = db_url.split('?')[0]
+
+# 3. Configurar a base de dados com a URL limpa
 DATABASES = {
     'default': dj_database_url.parse(
-        DATABASE_URL,
+        db_url,
         conn_max_age=600,
-        conn_health_checks=True,
     )
-} if DATABASE_URL else {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
