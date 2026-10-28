@@ -22,6 +22,13 @@ export async function pratoPorId(pratoId) {
   return requisicaoApi(`/pratos/${pratoId}`);
 }
 
+export async function atualizarMargemPrato(pratoId, margem) {
+  return requisicaoApi(`/pratos/${pratoId}`, {
+    method: "PATCH",
+    body: { margem_lucro_percentual: margem },
+  });
+}
+
 export async function criarPrato(nome) {
   return requisicaoApi("/pratos", {
     method: "POST",

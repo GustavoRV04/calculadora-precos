@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { ChartNoAxesColumnIncreasing, FileText } from "lucide-react";
-import { calcularPrato } from "../services/pratoService";
-import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
+import { ChartNoAxesColumnIncreasing, CircleAlert, FileText } from "lucide-react";
+import { atualizarMargemPrato, calcularPrato } from "../services/pratoService";
+import { calcularCustoIngrediente, calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 
 const cores = ["blue", "mint", "lavender", "coral"];
 
-export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato }) {
+export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, onSaved }) {
   const [filtroId, setFiltroId] = useState("");
+  const [margens, setMargens] = useState({});
+  const [errosMargem, setErrosMargem] = useState({});
+  const [statusMargem, setStatusMargem] = useState({});
   const pratoId = filtroId || pratoSelecionado || String(pratos[0]?.id ?? "");
   const prato = pratos.find((registro) => String(registro.id) === String(pratoId));
+  const pratoKey = String(prato?.id ?? "");
+  const margem = margens[pratoKey] ?? String(prato?.margem_lucro_percentual ?? "20.00");
+  const erroMargem = errosMargem[pratoKey];
+  const statusDaMargem = statusMargem[pratoKey];
   const total = calcularPrato(prato);
+  const margemNumerica = Number(margem);
+  const margemValida = margem.trim() !== "" && Number.isFinite(margemNumerica) && margemNumerica >= 0 && margemNumerica < 100;
+  const precoVenda = margemValida ? calcularPrecoVendaComMargem(total, margemNumerica) : null;
   const linhas = (prato?.prato_itens ?? []).map((pratoItem, index) => {
     const custo = calcularCustoIngrediente(pratoItem.item.preco_custo, pratoItem.item.quantidade_compra, pratoItem.quantidade, pratoItem.item.unidade_medida);
     return { ...pratoItem, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] };
@@ -20,6 +30,43 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato }
   function selecionar(event) {
     setFiltroId(event.target.value);
     onSelectPrato(event.target.value);
+  }
+
+  async function salvarMargem(pratoAlvo, margemAlvo) {
+    if (!pratoAlvo) return;
+    const chave = String(pratoAlvo.id);
+    const margemSalva = Number(pratoAlvo.margem_lucro_percentual ?? 20);
+    const margemAtual = Number(margemAlvo);
+    const margemValida = margemAlvo.trim() !== "" && Number.isFinite(margemAtual) && margemAtual >= 0 && margemAtual < 100;
+
+    if (!margemValida) {
+      setMargens((atuais) => {
+        const proximas = { ...atuais };
+        delete proximas[chave];
+        return proximas;
+      });
+      setErrosMargem((atuais) => ({ ...atuais, [chave]: "Informe uma margem entre 0% e 99,99%." }));
+      setStatusMargem((atuais) => ({ ...atuais, [chave]: "" }));
+      return;
+    }
+
+    setErrosMargem((atuais) => ({ ...atuais, [chave]: "" }));
+    if (margemAtual === margemSalva) return;
+
+    setStatusMargem((atuais) => ({ ...atuais, [chave]: "Salvando margem..." }));
+    try {
+      await atualizarMargemPrato(pratoAlvo.id, margemAtual);
+      setStatusMargem((atuais) => ({ ...atuais, [chave]: "Margem salva." }));
+      onSaved();
+    } catch (error) {
+      setMargens((atuais) => {
+        const proximas = { ...atuais };
+        delete proximas[chave];
+        return proximas;
+      });
+      setStatusMargem((atuais) => ({ ...atuais, [chave]: "" }));
+      setErrosMargem((atuais) => ({ ...atuais, [chave]: error.message }));
+    }
   }
 
   return (
@@ -41,7 +88,17 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato }
         <>
           <section className="sheet-hero">
             <div className="sheet-hero-title"><span className="dish-icon"><FileText size={21} /></span><div><h2>{prato.nome}</h2><p>{linhas.length} {linhas.length === 1 ? "ingrediente" : "ingredientes"} na receita</p></div></div>
-            <div className="sheet-total"><span>Custo de produção</span><strong>{formatarMoeda(total)}</strong></div>
+            <div className="sheet-pricing">
+              <label className="field-label sheet-margin">Margem de lucro
+                <span className="percentage-input"><input aria-label="Margem de lucro em porcentagem" max="99.99" min="0" onBlur={() => salvarMargem(prato, margem)} onChange={(event) => { setMargens((atuais) => ({ ...atuais, [pratoKey]: event.target.value })); setErrosMargem((atuais) => ({ ...atuais, [pratoKey]: "" })); setStatusMargem((atuais) => ({ ...atuais, [pratoKey]: "" })); }} step="0.01" type="number" value={margem} /><span>%</span></span>
+                <span className="field-hint">Sobre o preço de venda. Salva ao sair do campo.</span>
+                {statusDaMargem === "Salvando margem..." && <span className="field-hint" aria-live="polite">{statusDaMargem}</span>}
+                {statusDaMargem === "Margem salva." && <span className="field-success" aria-live="polite">{statusDaMargem}</span>}
+                {erroMargem && <span className="field-error" role="alert"><CircleAlert size={14} />{erroMargem}</span>}
+              </label>
+              <div className="sheet-total"><span>Custo de produção</span><strong>{formatarMoeda(total)}</strong></div>
+              <div className="sheet-total sheet-sale-price"><span>Preço de venda sugerido</span><strong>{precoVenda === null ? "—" : formatarMoeda(precoVenda)}</strong></div>
+            </div>
             <p className="sheet-note"><ChartNoAxesColumnIncreasing size={16} /> Calculado a partir das últimas compras registradas.</p>
           </section>
 

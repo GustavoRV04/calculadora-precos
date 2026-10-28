@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
@@ -45,6 +47,17 @@ class ItemSerializer(serializers.ModelSerializer):
         queryset=Produto.objects.all(),
         write_only=True
     )
+    preco_custo = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+    )
+    unidade_medida = serializers.ChoiceField(choices=["KG", "G", "L", "ML", "UN"])
+    quantidade_compra = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        min_value=Decimal("0.001"),
+    )
     
     class Meta:
         model = Item
@@ -79,6 +92,11 @@ class PratoItemSerializer(serializers.ModelSerializer):
         queryset=Prato.objects.all(),
         write_only=True
     )
+    quantidade = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        min_value=Decimal("0.001"),
+    )
 
     class Meta:
         model = PratoItem
@@ -97,6 +115,13 @@ class PratoItemSerializer(serializers.ModelSerializer):
         return fields
 
 class PratoSerializer(serializers.ModelSerializer):
+    margem_lucro_percentual = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        min_value=0,
+        max_value=Decimal("99.99"),
+        required=False,
+    )
     prato_itens = PratoItemSerializer(
         source='pratoitem_set',
         many=True,
@@ -104,5 +129,5 @@ class PratoSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Prato
-        fields = ["id", "nome", "restaurante_id", "prato_itens"]
+        fields = ["id", "nome", "restaurante_id", "margem_lucro_percentual", "prato_itens"]
         read_only_fields = ["restaurante_id", "prato_itens"]

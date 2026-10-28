@@ -39,6 +39,11 @@ class Item(models.Model):
 
 class Prato(models.Model):
     nome = models.CharField(max_length=100)
+    margem_lucro_percentual = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=20,
+    )
     restaurante = models.ForeignKey(
         Restaurante,
         on_delete=models.CASCADE,

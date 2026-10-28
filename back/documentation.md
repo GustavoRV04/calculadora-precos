@@ -26,4 +26,4 @@ A base da API REST é `http://localhost:8000/api/v1`. As rotas não usam barra n
 
 Após cadastro/login, envie `Authorization: Token <token>` nas chamadas de produtos, itens, pratos e associações. O servidor identifica o comércio pelo token e impede acesso ou associação a registros de outro comércio.
 
-O SQLite é usado por padrão e não requer configuração adicional. `python manage.py migrate` deve ser executado após atualizar o projeto ou clonar o repositório pela primeira vez.
+O SQLite é usado por padrão e não requer configuração adicional. `python manage.py migrate` deve ser executado após atualizar o projeto ou clonar o repositório pela primeira vez. Em ambientes que usam PostgreSQL, configure `POSTGRES_URL_NON_POOLING` (preferida para migrações) ou `POSTGRES_URL`. No Vercel, uma dessas variáveis é obrigatória; localmente, sem elas, o backend usa o arquivo `back/db.sqlite3`.

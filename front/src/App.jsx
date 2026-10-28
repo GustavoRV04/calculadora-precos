@@ -73,7 +73,7 @@ export default function App() {
         {secao === "dashboard" && <Dashboard pratos={dados.pratos} carregando={carregando} onNavigate={setSecao} onSelectPrato={setPratoSelecionado} />}
         {secao === "compras" && <Compras produtos={dados.produtos} itens={dados.itens} carregando={carregando} onSaved={atualizarDados} />}
         {secao === "montar" && <MontarPrato pratos={dados.pratos} itens={dados.itens} onSaved={atualizarDados} onNavigate={setSecao} />}
-        {secao === "ficha" && <FichaTecnica pratos={dados.pratos} pratoSelecionado={pratoSelecionado} onSelectPrato={setPratoSelecionado} />}
+        {secao === "ficha" && <FichaTecnica pratos={dados.pratos} pratoSelecionado={pratoSelecionado} onSelectPrato={setPratoSelecionado} onSaved={atualizarDados} />}
       </main>
       <BottomNav secaoAtiva={secao} onNavigate={setSecao} />
     </div>

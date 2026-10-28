@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -68,6 +70,38 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(item.produto.restaurante, self.restaurante)
 		self.assertEqual(resposta.data['produto']['nome'], 'Farinha')
 
+	def test_cadastro_de_item_rejeita_unidade_nao_suportada(self):
+		produto = self.criar_produto('Farinha')
+
+		resposta = self.client.post('/api/v1/itens', {
+			'produto_id': produto.id,
+			'preco_custo': '12.50',
+			'quantidade_compra': '1000',
+			'unidade_medida': 'PACOTE',
+		})
+
+		self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertFalse(Item.objects.exists())
+
+	def test_cadastro_de_item_rejeita_preco_ou_quantidade_nao_positivos(self):
+		produto = self.criar_produto('Farinha')
+		dados_validos = {
+			'produto_id': produto.id,
+			'preco_custo': '12.50',
+			'quantidade_compra': '1000',
+			'unidade_medida': 'G',
+		}
+
+		for campo, valor in [('preco_custo', '0'), ('quantidade_compra', '0')]:
+			with self.subTest(campo=campo):
+				resposta = self.client.post(
+					'/api/v1/itens',
+					{**dados_validos, campo: valor},
+				)
+				self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+
+		self.assertFalse(Item.objects.exists())
+
 	def test_item_do_prato_fica_vinculado_ao_prato_e_item(self):
 		produto = self.criar_produto('Farinha')
 		item = Item.objects.create(
@@ -117,6 +151,47 @@ class ComercioApiTests(APITestCase):
 
 		self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
 		self.assertFalse(PratoItem.objects.exists())
+
+	def test_prato_novo_comeca_com_margem_padrao_de_vinte_porcento(self):
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
+
+		self.assertEqual(prato.margem_lucro_percentual, Decimal('20.00'))
+
+	def test_margem_do_prato_pode_ser_atualizada(self):
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
+
+		resposta = self.client.patch(
+			f'/api/v1/pratos/{prato.id}',
+			{'margem_lucro_percentual': '30.25'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(resposta.data['margem_lucro_percentual'], '30.25')
+		prato.refresh_from_db()
+		self.assertEqual(str(prato.margem_lucro_percentual), '30.25')
+
+	def test_margem_nao_pode_ser_igual_ou_maior_que_cem(self):
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
+
+		resposta = self.client.patch(
+			f'/api/v1/pratos/{prato.id}',
+			{'margem_lucro_percentual': '100'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+
+	def test_nao_pode_alterar_margem_de_prato_de_outro_comercio(self):
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.outro_restaurante)
+
+		resposta = self.client.patch(
+			f'/api/v1/pratos/{prato.id}',
+			{'margem_lucro_percentual': '30.00'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_404_NOT_FOUND)
 
 	def test_str_de_item_e_associacao_usa_o_nome_do_produto(self):
 		produto = self.criar_produto('Farinha')

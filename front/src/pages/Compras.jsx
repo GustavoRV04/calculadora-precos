@@ -3,7 +3,7 @@ import { Check, CircleAlert, PackagePlus, Plus, ReceiptText } from "lucide-react
 import { criarItem, criarProduto } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
-import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 
 const unidades = [
   { valor: "KG", nome: "Quilogramas (kg)" },
@@ -105,7 +105,7 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
           </div>
           <div className="cost-preview field-span">
             <span className="preview-icon"><ReceiptText size={20} /></span>
-            <div><span className="preview-label">Custo por {unidadeBase(unidade) === "UN" ? "unidade" : unidadeBase(unidade).toLowerCase()}</span><strong>{custoUnitario === null ? "Preencha os valores" : formatarMoeda(custoUnitario, 3)}</strong></div>
+            <div><span className="preview-label">Custo por {unidadeBase(unidade) === "UN" ? "unidade" : unidadeBase(unidade).toLowerCase()}</span><strong>{custoUnitario === null ? "Preencha os valores" : formatarCustoUnitario(custoUnitario)}</strong></div>
           </div>
           {erro && <p className="form-error field-span" role="alert"><CircleAlert size={16} />{erro}</p>}
           <button className="button-primary field-span submit-button" disabled={salvando || carregando} type="submit">
@@ -125,7 +125,7 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
                 <article className="purchase-row" key={item.id}>
                   <span className="dish-icon"><ReceiptText size={20} /></span>
                   <div className="purchase-main"><h3>{item.produto?.nome}</h3><p>Comprado: {formatarQuantidade(item.quantidade_compra)} {item.unidade_medida}</p><p>Pago: {formatarMoeda(item.preco_custo)}</p></div>
-                  <div className="dish-cost"><span>Custo unitário</span><strong>{formatarMoeda(unitCost, 3)} / {base.toLowerCase()}</strong></div>
+                  <div className="dish-cost"><span>Custo unitário</span><strong>{formatarCustoUnitario(unitCost)} / {base.toLowerCase()}</strong></div>
                 </article>
               );
             })}

@@ -147,8 +147,19 @@ input, select { min-width: 0; }
 .sheet-hero-title { display: flex; align-items: center; gap: 10px; }
 .sheet-hero-title h2 { overflow: hidden; margin: 0; font-family: Manrope,sans-serif; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
 .sheet-hero-title p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.sheet-pricing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr); align-items: stretch; gap: 10px; }
+.sheet-margin { justify-content: center; padding: 13px; background: var(--surface-low); border-radius: 11px; }
+.percentage-input { position: relative; display: flex; align-items: center; }
+.percentage-input input { width: 100%; min-height: 47px; padding: 10px 36px 10px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 16px; font-weight: 700; }
+.percentage-input input:focus { border-color: var(--primary-bright); outline: 3px solid rgba(29,78,216,.12); }
+.percentage-input > span { position: absolute; right: 12px; color: var(--muted); }
+.field-success { color: var(--muted); font-size: 11px; font-weight: 500; }
+.field-success { color: var(--green); }
+.field-error { display: flex; align-items: center; gap: 4px; color: var(--danger); font-size: 11px; font-weight: 600; }
 .sheet-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px; background: var(--surface-low); border-radius: 11px; }
 .sheet-total strong { color: var(--primary); font-family: Manrope,sans-serif; font-size: 28px; font-weight: 800; white-space: nowrap; }
+.sheet-sale-price { background: #e7f8f0; }
+.sheet-sale-price strong { color: var(--green); }
 .sheet-note { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 12px; }
 .sheet-note svg { color: var(--green); }
 .breakdown-panel { gap: 14px; padding: 17px; }
@@ -233,6 +244,7 @@ input, select { min-width: 0; }
   .total-banner { padding: 13px; }
   .total-banner strong { font-size: 21px; }
   .sheet-hero { padding: 14px; }
+  .sheet-pricing { grid-template-columns: 1fr; }
   .sheet-total strong { font-size: 25px; }
   .breakdown-panel { padding: 14px; }
   .breakdown-row { gap: 8px; padding: 9px; }
