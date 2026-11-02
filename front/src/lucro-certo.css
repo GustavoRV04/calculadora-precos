@@ -104,6 +104,10 @@ input, select { min-width: 0; }
 .empty-state p { max-width: 350px; margin: 5px 0 12px; font-size: 13px; }
 .empty-state .button-primary { margin-top: 3px; }
 .count-badge { display: grid; min-width: 32px; height: 30px; place-items: center; padding: 0 9px; color: var(--primary); background: var(--primary-pale); border-radius: 999px; font-size: 12px; font-weight: 800; }
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 9px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.form-grid > .pagination { grid-column: 1/-1; }
+.pagination-button { min-height: 36px; padding: 7px 11px; font-size: 12px; }
+.pagination-button:disabled { cursor: not-allowed; opacity: .5; }
 .form-panel { display: flex; flex-direction: column; gap: 17px; padding: 18px; }
 .compact-panel { gap: 13px; }
 .panel-title { display: flex; align-items: center; gap: 10px; }
@@ -115,6 +119,9 @@ input, select { min-width: 0; }
 .field-span { grid-column: 1/-1; }
 .field-label { display: flex; min-width: 0; flex-direction: column; gap: 7px; color: var(--ink); font-size: 13px; font-weight: 700; }
 .field-label > input, .field-label > select, .inline-create > input, .input-wrap input, .quantity-fields > input, .quantity-fields > select { width: 100%; min-height: 47px; padding: 10px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; font-weight: 500; }
+.async-select__control { min-height: 47px !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important; }
+.async-select__control--is-focused { border-color: var(--primary-bright) !important; box-shadow: 0 0 0 3px rgba(29,78,216,.12) !important; }
+.async-select__menu { z-index: 20 !important; }
 .field-label > input::placeholder, .inline-create > input::placeholder { color: #929bad; }
 .field-label > input:focus, .field-label > select:focus, .inline-create > input:focus, .input-wrap input:focus, .quantity-fields > input:focus, .quantity-fields > select:focus { border-color: var(--primary-bright); outline: 3px solid rgba(29,78,216,.12); }
 .field-hint { color: var(--muted); font-size: 11px; font-weight: 400; }
@@ -226,6 +233,7 @@ input, select { min-width: 0; }
   .button-primary, .button-secondary { padding: 9px 10px; font-size: 12px; }
   .list-toolbar { align-items: flex-start; flex-wrap: wrap; }
   .search-box { width: 100%; }
+  .pagination { width: 100%; justify-content: space-between; }
   .dish-card { flex-wrap: wrap; gap: 9px; padding: 12px; }
   .dish-icon { width: 38px; height: 38px; }
   .dish-main { flex-basis: calc(100% - 54px); }

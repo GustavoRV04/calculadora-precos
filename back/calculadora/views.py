@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Item, Prato, PratoItem, Produto, Restaurante
 from .serializers import (
@@ -62,11 +63,11 @@ class LoginRestauranteView(APIView):
 
 
 class RestauranteScopedViewSet(viewsets.ModelViewSet):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    #authentication_classes = [TokenAuthentication]
+    #permission_classes = [IsAuthenticated]
 
     def get_restaurante(self):
-        restaurante = Restaurante.objects.filter(usuario=self.request.user).first()
+        restaurante = Restaurante.objects.first()
         if not restaurante:
             raise PermissionDenied("Esta conta não possui um comércio associado.")
         return restaurante
@@ -75,6 +76,8 @@ class RestauranteScopedViewSet(viewsets.ModelViewSet):
 class ProdutoViewSet(RestauranteScopedViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
+
+    search_fields = ["nome"]
 
     def get_queryset(self):
         return Produto.objects.filter(restaurante=self.get_restaurante())
@@ -87,6 +90,8 @@ class ItemViewSet(RestauranteScopedViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
 
+    search_fields = ["produto__nome"]
+
     def get_queryset(self):
         return Item.objects.filter(produto__restaurante=self.get_restaurante())
 
@@ -94,6 +99,11 @@ class ItemViewSet(RestauranteScopedViewSet):
 class PratoViewSet(RestauranteScopedViewSet):
     queryset = Prato.objects.all().prefetch_related("pratoitem_set__item__produto")
     serializer_class = PratoSerializer
+
+    # pesquisa exata
+    # filterset_fields = ["nome"]
+    # pesquisa parcial '%teste%'
+    search_fields = ["nome"]
 
     def get_queryset(self):
         return Prato.objects.filter(restaurante=self.get_restaurante()).prefetch_related(

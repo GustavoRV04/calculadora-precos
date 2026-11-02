@@ -10,7 +10,7 @@ export default function ItemForm({ dataVersion, onSaved }) {
 
   useEffect(() => {
     async function carregar() {
-      const dados = await listarProdutos();
+      const { results: dados } = await listarProdutos();
 
       setProdutos(dados);
 

@@ -13,10 +13,10 @@ export default function PratoItemForm({ dataVersion, onSaved }) {
 
   useEffect(() => {
     async function carregarDados() {
-      const pratosData = await listarPratos();
+      const { results: pratosData } = await listarPratos();
       setPratos(pratosData);
 
-      const itensData = await listarItens();
+      const { results: itensData } = await listarItens();
       setItens(itensData);
 
       console.log("todos os itens: ", itensData);

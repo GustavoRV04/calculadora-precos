@@ -1,4 +1,5 @@
 import { requisicaoApi } from "./api";
+import { LIMITE_PAGINACAO } from "./produtoService";
 
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 
@@ -47,8 +48,14 @@ export async function adicionarIngrediente(pratoId, itemId, quantidade) {
   });
 }
 
-export async function listarPratos() {
-  return requisicaoApi("/pratos");
+export async function listarPratos(offset = 0, search = "") {
+  const parametros = new URLSearchParams({
+    limit: String(LIMITE_PAGINACAO),
+    offset: String(offset),
+  });
+
+  if (search.trim()) parametros.set("search", search.trim());
+  return requisicaoApi(`/pratos?${parametros}`);
 }
 
 export async function removerIngrediente(pratoItemId) {

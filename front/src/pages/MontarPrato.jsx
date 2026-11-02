@@ -1,24 +1,33 @@
 import { useState } from "react";
-import { Check, CircleAlert, CookingPot, Plus, Trash2 } from "lucide-react";
-import { adicionarIngrediente, calcularPrato, criarPrato, removerIngrediente } from "../services/pratoService";
+import { Check, CircleAlert, CookingPot, Plus, Search, Trash2 } from "lucide-react";
+import { adicionarIngrediente, calcularPrato, criarPrato, listarPratos, pratoPorId, removerIngrediente } from "../services/pratoService";
+import { listarItens } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
-export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
+export default function MontarPrato({ pratos, itens, onSaved, onPratoAtualizado, onNavigate }) {
   const [nomePrato, setNomePrato] = useState("");
   const [pratoId, setPratoId] = useState("");
   const [itemId, setItemId] = useState("");
+  const [pratoSelecionado, setPratoSelecionado] = useState(null);
+  const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [buscaIngredientes, setBuscaIngredientes] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const pratoAtivoId = pratoId || String(pratos[0]?.id ?? "");
-  const prato = pratos.find((registro) => String(registro.id) === String(pratoAtivoId));
-  const item = itens.find((registro) => String(registro.id) === String(itemId));
+  const prato = pratoSelecionado?.registro ?? pratos.find((registro) => String(registro.id) === String(pratoAtivoId));
+  const item = itemSelecionado?.registro ?? itens.find((registro) => String(registro.id) === String(itemId));
+  const opcaoPratoSelecionado = pratoSelecionado ?? (prato ? { value: prato.id, label: prato.nome, registro: prato } : null);
   const custoParcial = item && quantidade
     ? calcularCustoIngrediente(item.preco_custo, item.quantidade_compra, Number(quantidade), item.unidade_medida)
     : 0;
   const unidadeReceita = unidadeBase(item?.unidade_medida);
+  const ingredientesFiltrados = (prato?.prato_itens ?? []).filter((pratoItem) => (
+    pratoItem.item.produto.nome.toLocaleLowerCase("pt-BR").includes(buscaIngredientes.trim().toLocaleLowerCase("pt-BR"))
+  ));
 
   async function salvarPrato(event) {
     event.preventDefault();
@@ -28,6 +37,7 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
     try {
       const novoPrato = await criarPrato(nomePrato.trim());
       setPratoId(String(novoPrato.id));
+      setPratoSelecionado({ value: novoPrato.id, label: novoPrato.nome, registro: novoPrato });
       setNomePrato("");
       onSaved();
     } catch (error) {
@@ -35,6 +45,26 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
     } finally {
       setSalvando(false);
     }
+  }
+
+  function buscarPratos(busca, offset) {
+    return listarPratos(offset, busca);
+  }
+
+  function buscarItens(busca, offset) {
+    return listarItens(offset, busca);
+  }
+
+  function opcaoPrato(registro) {
+    return { value: registro.id, label: registro.nome, registro };
+  }
+
+  function opcaoItem(registro) {
+    return {
+      value: registro.id,
+      label: `${registro.produto?.nome} · ${formatarMoeda(registro.preco_custo)} / ${formatarQuantidade(registro.quantidade_compra)} ${registro.unidade_medida}`,
+      registro,
+    };
   }
 
   async function incluirItem(event) {
@@ -52,8 +82,10 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
     setSalvando(true);
     try {
       await adicionarIngrediente(pratoAtivoId, itemId, Number(quantidade));
+      const pratoAtualizado = await pratoPorId(pratoAtivoId);
+      setPratoSelecionado(opcaoPrato(pratoAtualizado));
+      onPratoAtualizado(pratoAtualizado);
       setQuantidade("");
-      onSaved();
     } catch (error) {
       setErro(error.message);
     } finally {
@@ -65,7 +97,9 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
     setErro("");
     try {
       await removerIngrediente(pratoItemId);
-      onSaved();
+      const pratoAtualizado = await pratoPorId(pratoAtivoId);
+      setPratoSelecionado(opcaoPrato(pratoAtualizado));
+      onPratoAtualizado(pratoAtualizado);
     } catch (error) {
       setErro(error.message);
     }
@@ -90,24 +124,17 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
         <div className="panel-title"><span className="section-icon"><CookingPot size={19} /></span><div><h2>Adicionar ingrediente</h2><p>Selecione o prato e o item comprado que entra na receita.</p></div></div>
         <form className="form-grid" onSubmit={incluirItem}>
           <label className="field-label field-span">Prato
-            <select value={pratoAtivoId} onChange={(event) => setPratoId(event.target.value)}>
-              <option value="">Selecione um prato</option>
-              {pratos.map((registro) => <option key={registro.id} value={registro.id}>{registro.nome}</option>)}
-            </select>
+            <SelectBackendPaginado buscarPagina={buscarPratos} inputId="prato" noOptionsMessage="Nenhum prato encontrado" onChange={(opcao) => { setPratoSelecionado(opcao); setPratoId(String(opcao?.value ?? "")); }} opcaoAtualizada={pratoSelecionado} paraOpcao={opcaoPrato} placeholder="Busque um prato" value={opcaoPratoSelecionado} />
           </label>
           <label className="field-label field-span">Insumo comprado
-            <select required value={itemId} onChange={(event) => setItemId(event.target.value)}>
-              <option value="">Selecione um insumo</option>
-              {itens.map((registro) => <option key={registro.id} value={registro.id}>{registro.produto?.nome} · {formatarMoeda(registro.preco_custo)} / {formatarQuantidade(registro.quantidade_compra)} {registro.unidade_medida}</option>)}
-            </select>
-            {!itens.length && <span className="field-hint">Cadastre uma compra primeiro para escolher os insumos.</span>}
+            <SelectBackendPaginado buscarPagina={buscarItens} inputId="item" noOptionsMessage="Nenhum insumo encontrado" onChange={(opcao) => { setItemSelecionado(opcao); setItemId(String(opcao?.value ?? "")); }} paraOpcao={opcaoItem} placeholder="Busque um insumo comprado" value={itemSelecionado} />
           </label>
           <label className="field-label">Quantidade na receita ({unidadeReceita || "unidade"})
             <input required min="0.001" step="0.001" type="number" value={quantidade} onChange={(event) => setQuantidade(event.target.value)} placeholder="0" />
           </label>
           <div className="cost-preview partial-cost"><div><span className="preview-label">Custo parcial</span><strong>{formatarMoeda(custoParcial)}</strong></div></div>
           {erro && <p className="form-error field-span" role="alert"><CircleAlert size={16} />{erro}</p>}
-          <button className="button-primary field-span submit-button" disabled={salvando || !itens.length} type="submit">
+          <button className="button-primary field-span submit-button" disabled={salvando || !itemId} type="submit">
             {salvando ? <span className="loader-dot" /> : <><Check size={18} /> Adicionar ao prato</>}
           </button>
         </form>
@@ -115,11 +142,11 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
       </section>
 
       <section className="list-section">
-        <div className="list-toolbar"><div><h2>Ingredientes no prato</h2><p>{prato?.nome ?? "Selecione uma receita"}</p></div><span className="count-badge">{prato?.prato_itens?.length ?? 0}</span></div>
-        {prato?.prato_itens?.length ? (
+        <div className="list-toolbar"><div><h2>Ingredientes no prato</h2><p>{prato?.nome ?? "Selecione uma receita"}</p></div><label className="search-box"><Search size={18} aria-hidden="true" /><input value={buscaIngredientes} onChange={(event) => setBuscaIngredientes(event.target.value)} placeholder="Buscar ingrediente" aria-label="Buscar ingrediente no prato" /></label><span className="count-badge">{prato?.prato_itens?.length ?? 0}</span></div>
+        {ingredientesFiltrados.length ? (
           <>
             <div className="ingredient-list">
-              {prato.prato_itens.map((pratoItem) => {
+              {ingredientesFiltrados.map((pratoItem) => {
                 const custo = calcularCustoIngrediente(pratoItem.item.preco_custo, pratoItem.item.quantidade_compra, pratoItem.quantidade, pratoItem.item.unidade_medida);
                 return <article className="ingredient-row" key={pratoItem.id}>
                   <span className="dish-icon"><CookingPot size={19} /></span>
@@ -132,7 +159,7 @@ export default function MontarPrato({ pratos, itens, onSaved, onNavigate }) {
             <div className="total-banner"><div><span>Custo total do prato</span><small>Com base nos itens da receita</small></div><strong>{formatarMoeda(calcularPrato(prato))}</strong></div>
           </>
         ) : (
-          <div className="empty-state"><span className="empty-icon"><CookingPot size={23} /></span><h3>{prato ? "Receita sem ingredientes" : "Nenhum prato cadastrado"}</h3><p>{prato ? "Escolha um insumo acima para começar a composição." : "Crie um prato e adicione os ingredientes comprados."}</p></div>
+          <div className="empty-state"><span className="empty-icon"><CookingPot size={23} /></span><h3>{prato ? (buscaIngredientes ? "Nenhum ingrediente encontrado" : "Receita sem ingredientes") : "Nenhum prato cadastrado"}</h3><p>{prato ? (buscaIngredientes ? "Tente outro nome." : "Escolha um insumo acima para começar a composição.") : "Crie um prato e adicione os ingredientes comprados."}</p></div>
         )}
       </section>
     </div>

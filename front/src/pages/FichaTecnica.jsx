@@ -1,19 +1,22 @@
 import { useState } from "react";
 import { ChartNoAxesColumnIncreasing, CircleAlert, FileText } from "lucide-react";
-import { atualizarMargemPrato, calcularPrato } from "../services/pratoService";
+import { atualizarMargemPrato, calcularPrato, listarPratos } from "../services/pratoService";
 import { calcularCustoIngrediente, calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 const cores = ["blue", "mint", "lavender", "coral"];
 
 export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, onSaved }) {
   const [filtroId, setFiltroId] = useState("");
+  const [pratoSelecionadoAsync, setPratoSelecionadoAsync] = useState(null);
   const [margens, setMargens] = useState({});
   const [errosMargem, setErrosMargem] = useState({});
   const [statusMargem, setStatusMargem] = useState({});
   const pratoId = filtroId || pratoSelecionado || String(pratos[0]?.id ?? "");
-  const prato = pratos.find((registro) => String(registro.id) === String(pratoId));
+  const prato = pratoSelecionadoAsync?.registro ?? pratos.find((registro) => String(registro.id) === String(pratoId));
+  const opcaoPrato = pratoSelecionadoAsync ?? (prato ? { value: prato.id, label: prato.nome, registro: prato } : null);
   const pratoKey = String(prato?.id ?? "");
   const margem = margens[pratoKey] ?? String(prato?.margem_lucro_percentual ?? "20.00");
   const erroMargem = errosMargem[pratoKey];
@@ -27,9 +30,19 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
     return { ...pratoItem, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] };
   });
 
-  function selecionar(event) {
-    setFiltroId(event.target.value);
-    onSelectPrato(event.target.value);
+  function selecionar(opcao) {
+    const id = String(opcao?.value ?? "");
+    setPratoSelecionadoAsync(opcao);
+    setFiltroId(id);
+    onSelectPrato(id);
+  }
+
+  function buscarPratos(busca, offset) {
+    return listarPratos(offset, busca);
+  }
+
+  function opcaoPratoBackend(registro) {
+    return { value: registro.id, label: registro.nome, registro };
   }
 
   async function salvarMargem(pratoAlvo, margemAlvo) {
@@ -78,9 +91,7 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
 
       <section className="form-panel sheet-select-panel">
         <label className="field-label">Prato
-          <select value={prato?.id ?? ""} onChange={selecionar}>
-            {pratos.length ? pratos.map((registro) => <option key={registro.id} value={registro.id}>{registro.nome}</option>) : <option value="">Nenhum prato cadastrado</option>}
-          </select>
+          <SelectBackendPaginado buscarPagina={buscarPratos} inputId="prato-ficha" noOptionsMessage="Nenhum prato encontrado" onChange={selecionar} paraOpcao={opcaoPratoBackend} placeholder="Busque um prato" value={opcaoPrato} />
         </label>
       </section>
 

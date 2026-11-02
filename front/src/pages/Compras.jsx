@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Check, CircleAlert, PackagePlus, Plus, ReceiptText } from "lucide-react";
-import { criarItem, criarProduto } from "../services/produtoService";
+import { Check, CircleAlert, PackagePlus, Plus, ReceiptText, Search } from "lucide-react";
+import { criarItem, criarProduto, listarProdutos } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import Paginacao from "../components/Paginacao";
+import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 const unidades = [
   { valor: "KG", nome: "Quilogramas (kg)" },
@@ -13,9 +15,9 @@ const unidades = [
   { valor: "UN", nome: "Unidades (un)" },
 ];
 
-export default function Compras({ produtos, itens, carregando, onSaved }) {
+export default function Compras({ busca, itens, paginacao, carregando, onBuscar, onSaved, onMudarPagina }) {
   const [origemProduto, setOrigemProduto] = useState("existente");
-  const [produtoId, setProdutoId] = useState("");
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [nomeProduto, setNomeProduto] = useState("");
   const [preco, setPreco] = useState("");
   const [quantidade, setQuantidade] = useState("");
@@ -38,7 +40,7 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
       setErro("Informe o nome do insumo.");
       return;
     }
-    if (origemProduto === "existente" && !produtoId) {
+    if (origemProduto === "existente" && !produtoSelecionado) {
       setErro("Selecione um insumo ou cadastre um novo.");
       return;
     }
@@ -47,11 +49,12 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
     try {
       const produto = origemProduto === "novo"
         ? await criarProduto(nomeProduto.trim())
-        : { id: produtoId };
+        : { id: produtoSelecionado.value };
       await criarItem(produto.id, Number(preco), Number(quantidade), unidade);
       setNomeProduto("");
       setPreco("");
       setQuantidade("");
+      setProdutoSelecionado(null);
       setOrigemProduto("existente");
       onSaved();
     } catch (error) {
@@ -59,6 +62,10 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
     } finally {
       setSalvando(false);
     }
+  }
+
+  function buscarProdutos(busca, offset) {
+    return listarProdutos(offset, busca);
   }
 
   return (
@@ -81,14 +88,12 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
               <input required maxLength={100} value={nomeProduto} onChange={(event) => setNomeProduto(event.target.value)} placeholder="Ex.: Queijo cheddar" />
             </label>
           ) : (
-            <label className="field-label field-span">
-              Insumo da despensa
-              <select required value={produtoId} onChange={(event) => setProdutoId(event.target.value)}>
-                <option value="">Selecione um insumo</option>
-                {produtos.map((produto) => <option key={produto.id} value={produto.id}>{produto.nome}</option>)}
-              </select>
-              {!produtos.length && <span className="field-hint">Ainda não há insumos. Use “Novo insumo” para começar.</span>}
-            </label>
+            <>
+              <label className="field-label field-span">
+                Insumo da despensa
+                <SelectBackendPaginado buscarPagina={buscarProdutos} inputId="produto" noOptionsMessage="Nenhum insumo encontrado" onChange={setProdutoSelecionado} paraOpcao={(produto) => ({ value: produto.id, label: produto.nome })} placeholder="Busque um insumo" value={produtoSelecionado} />
+              </label>
+            </>
           )}
           <label className="field-label">
             Preço pago
@@ -115,7 +120,8 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
       </section>
 
       <section className="list-section">
-        <div className="list-toolbar"><div><h2>Últimas compras</h2><p>{itens.length} registros neste comércio</p></div><span className="count-badge">{itens.length}</span></div>
+        <div className="list-toolbar"><div><h2>Últimas compras</h2><p>{paginacao.itens.count} registros neste comércio</p></div><label className="search-box"><Search size={18} aria-hidden="true" /><input value={busca} onChange={(event) => onBuscar(event.target.value)} placeholder="Buscar compra" aria-label="Buscar compra por insumo" /></label><span className="count-badge">{paginacao.itens.count}</span></div>
+        <Paginacao paginacao={paginacao.itens} rotulo="compras" onAnterior={() => onMudarPagina("itens", -1)} onProxima={() => onMudarPagina("itens", 1)} />
         {itens.length ? (
           <div className="purchase-list">
             {[...itens].reverse().map((item) => {
@@ -131,6 +137,7 @@ export default function Compras({ produtos, itens, carregando, onSaved }) {
             })}
           </div>
         ) : <div className="empty-state"><span className="empty-icon"><ShoppingCartIcon /></span><h3>Nenhuma compra registrada</h3><p>Cadastre uma compra para calcular o custo dos pratos.</p></div>}
+        <Paginacao paginacao={paginacao.itens} rotulo="compras" onAnterior={() => onMudarPagina("itens", -1)} onProxima={() => onMudarPagina("itens", 1)} />
       </section>
     </div>
   );

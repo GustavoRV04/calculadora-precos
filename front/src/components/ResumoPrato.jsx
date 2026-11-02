@@ -18,7 +18,7 @@ export default function ResumoPrato({ dataVersion }) {
 
   useEffect(() => {
     async function carregar() {
-      const lista = await listarPratos();
+      const { results: lista } = await listarPratos();
 
       setPratos(lista);
 

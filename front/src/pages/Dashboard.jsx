@@ -1,17 +1,13 @@
-import { useState } from "react";
 import { BookOpen, ArrowRight, Plus, Search, ShoppingCart, TrendingUp } from "lucide-react";
 import { calcularPrato } from "../services/pratoService";
 import { formatarMoeda } from "../utils/formatacao";
+import Paginacao from "../components/Paginacao";
 
-export default function Dashboard({ pratos, carregando, onNavigate, onSelectPrato }) {
-  const [busca, setBusca] = useState("");
+export default function Dashboard({ pratos, paginacao, busca, carregando, onNavigate, onSelectPrato, onMudarPagina, onBuscar }) {
   const pratosComCusto = pratos.map((prato) => ({ ...prato, custo: calcularPrato(prato) }));
   const custoMedio = pratosComCusto.length
     ? pratosComCusto.reduce((total, prato) => total + prato.custo, 0) / pratosComCusto.length
     : 0;
-  const filtrados = pratosComCusto.filter((prato) =>
-    prato.nome.toLocaleLowerCase("pt-BR").includes(busca.trim().toLocaleLowerCase("pt-BR")),
-  );
 
   return (
     <div className="page-stack">
@@ -27,7 +23,7 @@ export default function Dashboard({ pratos, carregando, onNavigate, onSelectPrat
       <section className="metrics-grid" aria-label="Resumo do comércio">
         <article className="metric-card">
           <div className="metric-label"><span>Pratos cadastrados</span><BookOpen size={17} /></div>
-          <div className="metric-value">{carregando ? "—" : pratos.length}<span>{pratos.length === 1 ? "prato" : "pratos"}</span></div>
+          <div className="metric-value">{carregando ? "—" : paginacao.count}<span>{paginacao.count === 1 ? "prato" : "pratos"}</span></div>
           <p>Com composição registrada</p>
         </article>
         <article className="metric-card metric-positive">
@@ -50,19 +46,19 @@ export default function Dashboard({ pratos, carregando, onNavigate, onSelectPrat
         <div className="list-toolbar">
           <div>
             <h2>Receitas do comércio</h2>
-            <p>{pratos.length} {pratos.length === 1 ? "prato cadastrado" : "pratos cadastrados"}</p>
+            <p>{paginacao.count} {paginacao.count === 1 ? "prato cadastrado" : "pratos cadastrados"}</p>
           </div>
           <label className="search-box">
             <Search size={18} aria-hidden="true" />
-            <input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar prato" aria-label="Buscar prato por nome" />
+            <input value={busca} onChange={(event) => onBuscar(event.target.value)} placeholder="Buscar prato" aria-label="Buscar prato por nome" />
           </label>
         </div>
 
         {carregando ? (
           <div className="empty-state"><span className="loader-dot" /><p>Carregando receitas…</p></div>
-        ) : filtrados.length ? (
+        ) : pratosComCusto.length ? (
           <div className="dish-list">
-            {filtrados.map((prato) => (
+            {pratosComCusto.map((prato) => (
               <article className="dish-card" key={prato.id}>
                 <span className="dish-icon"><BookOpen size={21} /></span>
                 <div className="dish-main">
@@ -84,6 +80,7 @@ export default function Dashboard({ pratos, carregando, onNavigate, onSelectPrat
             {!busca && <button className="button-primary" type="button" onClick={() => onNavigate("montar")}><Plus size={17} /> Criar primeiro prato</button>}
           </div>
         )}
+        <Paginacao paginacao={paginacao} rotulo="pratos" onAnterior={() => onMudarPagina("pratos", -1)} onProxima={() => onMudarPagina("pratos", 1)} />
       </section>
     </div>
   );
