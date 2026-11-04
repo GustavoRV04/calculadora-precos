@@ -8,11 +8,14 @@ export function calcularPrato(prato) {
     const item = pratoItem.item;
     if (!item) return soma;
 
-    return soma + calcularCustoIngrediente(
-      item.preco_custo,
-      item.quantidade_compra,
-      pratoItem.quantidade,
-      item.unidade_medida,
+    return (
+      soma +
+      calcularCustoIngrediente(
+        item.preco_custo,
+        item.quantidade_compra,
+        pratoItem.quantidade,
+        item.unidade_medida,
+      )
     );
   }, 0);
 
@@ -60,4 +63,14 @@ export async function listarPratos(offset = 0, search = "") {
 
 export async function removerIngrediente(pratoItemId) {
   return requisicaoApi(`/prato-itens/${pratoItemId}`, { method: "DELETE" });
+}
+
+export async function atualizarIngredientePratoService(
+  pratoItemId,
+  dadosAtualizados,
+) {
+  return requisicaoApi(`/prato-itens/${pratoItemId}`, {
+    body: dadosAtualizados,
+    method: "PUT",
+  });
 }

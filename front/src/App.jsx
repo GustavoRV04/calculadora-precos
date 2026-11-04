@@ -6,7 +6,11 @@ import Compras from "./pages/Compras";
 import Dashboard from "./pages/Dashboard";
 import FichaTecnica from "./pages/FichaTecnica";
 import MontarPrato from "./pages/MontarPrato";
-import { LIMITE_PAGINACAO, listarItens, listarProdutos } from "./services/produtoService";
+import {
+  LIMITE_PAGINACAO,
+  listarItens,
+  listarProdutos,
+} from "./services/produtoService";
 import { listarPratos } from "./services/pratoService";
 import { limparSessao, obterSessao } from "./services/api";
 
@@ -14,9 +18,27 @@ const dadosVazios = { produtos: [], itens: [], pratos: [] };
 const offsetsIniciais = { produtos: 0, itens: 0, pratos: 0 };
 const ATRASO_BUSCA_MS = 300;
 const paginacaoVazia = {
-  produtos: { count: 0, next: null, previous: null, offset: 0, limit: LIMITE_PAGINACAO },
-  itens: { count: 0, next: null, previous: null, offset: 0, limit: LIMITE_PAGINACAO },
-  pratos: { count: 0, next: null, previous: null, offset: 0, limit: LIMITE_PAGINACAO },
+  produtos: {
+    count: 0,
+    next: null,
+    previous: null,
+    offset: 0,
+    limit: LIMITE_PAGINACAO,
+  },
+  itens: {
+    count: 0,
+    next: null,
+    previous: null,
+    offset: 0,
+    limit: LIMITE_PAGINACAO,
+  },
+  pratos: {
+    count: 0,
+    next: null,
+    previous: null,
+    offset: 0,
+    limit: LIMITE_PAGINACAO,
+  },
 };
 
 export default function App() {
@@ -26,7 +48,11 @@ export default function App() {
   const [dados, setDados] = useState(dadosVazios);
   const [offsets, setOffsets] = useState(offsetsIniciais);
   const [paginacao, setPaginacao] = useState(paginacaoVazia);
-  const [carregamentos, setCarregamentos] = useState({ produtos: false, itens: false, pratos: false });
+  const [carregamentos, setCarregamentos] = useState({
+    produtos: false,
+    itens: false,
+    pratos: false,
+  });
   const [erroApi, setErroApi] = useState("");
   const [pratoSelecionado, setPratoSelecionado] = useState("");
   const [buscaPratos, setBuscaPratos] = useState("");
@@ -65,7 +91,11 @@ export default function App() {
         setDados((atuais) => ({ ...atuais, produtos: produtos.results }));
         setPaginacao((atuais) => ({
           ...atuais,
-          produtos: { ...produtos, offset: offsets.produtos, limit: LIMITE_PAGINACAO },
+          produtos: {
+            ...produtos,
+            offset: offsets.produtos,
+            limit: LIMITE_PAGINACAO,
+          },
         }));
         setErroApi("");
       })
@@ -80,10 +110,13 @@ export default function App() {
         setErroApi(error.message);
       })
       .finally(() => {
-        if (vigente) setCarregamentos((atuais) => ({ ...atuais, produtos: false }));
+        if (vigente)
+          setCarregamentos((atuais) => ({ ...atuais, produtos: false }));
       });
 
-    return () => { vigente = false; };
+    return () => {
+      vigente = false;
+    };
   }, [sessao, versaoDados, offsets.produtos]);
 
   useEffect(() => {
@@ -114,10 +147,13 @@ export default function App() {
         setErroApi(error.message);
       })
       .finally(() => {
-        if (vigente) setCarregamentos((atuais) => ({ ...atuais, itens: false }));
+        if (vigente)
+          setCarregamentos((atuais) => ({ ...atuais, itens: false }));
       });
 
-    return () => { vigente = false; };
+    return () => {
+      vigente = false;
+    };
   }, [sessao, versaoDados, offsets.itens, buscaItensAplicada]);
 
   useEffect(() => {
@@ -133,7 +169,11 @@ export default function App() {
         setDados((atuais) => ({ ...atuais, pratos: pratos.results }));
         setPaginacao((atuais) => ({
           ...atuais,
-          pratos: { ...pratos, offset: offsets.pratos, limit: LIMITE_PAGINACAO },
+          pratos: {
+            ...pratos,
+            offset: offsets.pratos,
+            limit: LIMITE_PAGINACAO,
+          },
         }));
         setErroApi("");
       })
@@ -148,10 +188,13 @@ export default function App() {
         setErroApi(error.message);
       })
       .finally(() => {
-        if (vigente) setCarregamentos((atuais) => ({ ...atuais, pratos: false }));
+        if (vigente)
+          setCarregamentos((atuais) => ({ ...atuais, pratos: false }));
       });
 
-    return () => { vigente = false; };
+    return () => {
+      vigente = false;
+    };
   }, [sessao, versaoDados, offsets.pratos, buscaPratosAplicada]);
 
   function atualizarDados() {
@@ -161,9 +204,11 @@ export default function App() {
   function atualizarPrato(pratoAtualizado) {
     setDados((atuais) => ({
       ...atuais,
-      pratos: atuais.pratos.map((prato) => (
-        String(prato.id) === String(pratoAtualizado.id) ? pratoAtualizado : prato
-      )),
+      pratos: atuais.pratos.map((prato) =>
+        String(prato.id) === String(pratoAtualizado.id)
+          ? pratoAtualizado
+          : prato,
+      ),
     }));
   }
 
@@ -200,11 +245,51 @@ export default function App() {
     <div className="app-shell">
       <Header restaurante={sessao.restaurante} onLogout={sair} />
       <main className="main-content">
-        {erroApi && <div className="notice-error" role="alert">{erroApi}</div>}
-        {secao === "dashboard" && <Dashboard pratos={dados.pratos} paginacao={paginacao.pratos} busca={buscaPratos} carregando={carregamentos.pratos} onNavigate={setSecao} onSelectPrato={setPratoSelecionado} onMudarPagina={mudarPagina} onBuscar={buscarPratos} />}
-        {secao === "compras" && <Compras busca={buscaItens} itens={dados.itens} paginacao={paginacao} carregando={carregamentos.produtos || carregamentos.itens} onBuscar={buscarItens} onSaved={atualizarDados} onMudarPagina={mudarPagina} />}
-        {secao === "montar" && <MontarPrato pratos={dados.pratos} itens={dados.itens} onSaved={atualizarDados} onPratoAtualizado={atualizarPrato} onNavigate={setSecao} />}
-        {secao === "ficha" && <FichaTecnica pratos={dados.pratos} pratoSelecionado={pratoSelecionado} onSelectPrato={setPratoSelecionado} onSaved={atualizarDados} />}
+        {erroApi && (
+          <div className="notice-error" role="alert">
+            {erroApi}
+          </div>
+        )}
+        {secao === "dashboard" && (
+          <Dashboard
+            pratos={dados.pratos}
+            paginacao={paginacao.pratos}
+            busca={buscaPratos}
+            carregando={carregamentos.pratos}
+            onNavigate={setSecao}
+            onSelectPrato={setPratoSelecionado}
+            onMudarPagina={mudarPagina}
+            onBuscar={buscarPratos}
+          />
+        )}
+        {secao === "compras" && (
+          <Compras
+            busca={buscaItens}
+            itens={dados.itens}
+            paginacao={paginacao}
+            carregando={carregamentos.produtos || carregamentos.itens}
+            onBuscar={buscarItens}
+            onSaved={atualizarDados}
+            onMudarPagina={mudarPagina}
+          />
+        )}
+        {secao === "montar" && (
+          <MontarPrato
+            pratos={dados.pratos}
+            itens={dados.itens}
+            onSaved={atualizarDados}
+            onPratoAtualizado={atualizarPrato}
+            onNavigate={setSecao}
+          />
+        )}
+        {secao === "ficha" && (
+          <FichaTecnica
+            pratos={dados.pratos}
+            pratoSelecionado={pratoSelecionado}
+            onSelectPrato={setPratoSelecionado}
+            onSaved={atualizarDados}
+          />
+        )}
       </main>
       <BottomNav secaoAtiva={secao} onNavigate={setSecao} />
     </div>
