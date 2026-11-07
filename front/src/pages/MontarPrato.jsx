@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ArrowRight,
   Check,
   CircleAlert,
   CookingPot,
@@ -45,6 +46,7 @@ export default function MontarPrato({
   const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false);
   const [ingredienteEditando, setIngredienteEditando] = useState(null);
   const [quantidadeEditada, setQuantidadeEditada] = useState("");
+  const [erroEdicao, setErroEdicao] = useState("");
 
   // Certifica-te de que o ID do prato é tratado consistentemente como número se o backend exigir Integer
   const pratoAtivoId = pratoId ? Number(pratoId) : Number(pratos[0]?.id ?? 0);
@@ -67,6 +69,16 @@ export default function MontarPrato({
           item.unidade_medida,
         )
       : 0;
+  const quantidadeAtual = Number(ingredienteEditando?.quantidade ?? 0);
+  const quantidadeNova = Number(quantidadeEditada);
+  const custoAtualizado = ingredienteEditando && quantidadeNova > 0
+    ? calcularCustoIngrediente(
+      ingredienteEditando.item.preco_custo,
+      ingredienteEditando.item.quantidade_compra,
+      quantidadeNova,
+      ingredienteEditando.item.unidade_medida,
+    )
+    : null;
 
   const unidadeReceita = unidadeBase(item?.unidade_medida);
   const ingredientesFiltrados = (prato?.prato_itens ?? []).filter((pratoItem) =>
@@ -159,19 +171,43 @@ export default function MontarPrato({
   function abrirModalEdicao(pratoItem) {
     setIngredienteEditando(pratoItem);
     setQuantidadeEditada(String(pratoItem.quantidade));
+    setErroEdicao("");
     setModalEdicaoAberto(true);
   }
 
-  function fecharModalEdicao() {
+  const fecharModalEdicao = useCallback(() => {
+    if (salvando) return;
     setModalEdicaoAberto(false);
     setIngredienteEditando(null);
     setQuantidadeEditada("");
-  }
+    setErroEdicao("");
+  }, [salvando]);
+
+  useEffect(() => {
+    if (!modalEdicaoAberto) return undefined;
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function fecharComEscape(event) {
+      if (event.key === "Escape" && !salvando) fecharModalEdicao();
+    }
+
+    document.addEventListener("keydown", fecharComEscape);
+    return () => {
+      document.removeEventListener("keydown", fecharComEscape);
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, [modalEdicaoAberto, salvando, fecharModalEdicao]);
 
   async function atualizarIngredientePrato(event) {
     event.preventDefault();
-    if (!ingredienteEditando || Number(quantidadeEditada) <= 0) return;
+    if (!ingredienteEditando || !Number.isFinite(quantidadeNova) || quantidadeNova <= 0) {
+      setErroEdicao("Informe uma quantidade maior que zero.");
+      return;
+    }
 
+    setErroEdicao("");
     setSalvando(true);
     try {
       await atualizarIngredientePratoService(ingredienteEditando.id, {
@@ -186,6 +222,7 @@ export default function MontarPrato({
       fecharModalEdicao();
     } catch (error) {
       setErro(error.message);
+      setErroEdicao(error.message);
     } finally {
       setSalvando(false);
     }
@@ -420,51 +457,82 @@ export default function MontarPrato({
         )}
       </section>
 
-      {/* Modal de Edição */}
       {modalEdicaoAberto && (
-        <div className="modal-overlay">
-          <div className="modal-content form-panel">
-            <div className="panel-title">
-              <div>
-                <h2>Editar ingrediente</h2>
-                <p>{ingredienteEditando?.item?.produto?.nome}</p>
+        <div
+          className="modal-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) fecharModalEdicao();
+          }}
+        >
+          <section
+            aria-labelledby="edit-ingredient-title"
+            aria-modal="true"
+            className="modal-content"
+            role="dialog"
+          >
+            <header className="edit-modal-header">
+              <span className="section-icon edit-modal-icon"><Pencil size={19} /></span>
+              <div className="edit-modal-heading">
+                <h2 id="edit-ingredient-title">Editar ingrediente</h2>
+                <p>Atualize a quantidade usada nesta receita.</p>
               </div>
               <button
                 className="icon-button"
+                disabled={salvando}
                 type="button"
                 onClick={fecharModalEdicao}
-                aria-label="Fechar modal"
+                aria-label="Fechar edição"
               >
                 <X size={19} />
               </button>
+            </header>
+
+            <div className="edit-ingredient-context">
+              <span className="dish-icon"><CookingPot size={19} /></span>
+              <div>
+                <strong>{ingredienteEditando?.item?.produto?.nome}</strong>
+                <span>Quantidade por receita em {unidadeBase(ingredienteEditando?.item?.unidade_medida) || "unidade"}</span>
+              </div>
             </div>
-            <form className="form-grid" onSubmit={atualizarIngredientePrato}>
-              <label className="field-label field-span">
-                Nova quantidade (
-                {unidadeBase(ingredienteEditando?.item?.unidade_medida) ||
-                  "unidade"}
-                )
+
+            <form className="edit-ingredient-form" onSubmit={atualizarIngredientePrato}>
+              <label className="field-label">
+                Nova quantidade
                 <input
+                  autoFocus
                   required
                   min="0.001"
                   step="0.001"
                   type="number"
                   value={quantidadeEditada}
-                  onChange={(event) => setQuantidadeEditada(event.target.value)}
+                  onChange={(event) => {
+                    setQuantidadeEditada(event.target.value);
+                    setErroEdicao("");
+                  }}
                   placeholder="0"
                 />
               </label>
-              <div
-                className="modal-actions field-span"
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "flex-end",
-                  marginTop: "1rem",
-                }}
-              >
+              <div className="edit-cost-preview" aria-live="polite">
+                <div>
+                  <span>Antes</span>
+                  <strong>{formatarMoeda(calcularCustoIngrediente(
+                    ingredienteEditando.item.preco_custo,
+                    ingredienteEditando.item.quantidade_compra,
+                    quantidadeAtual,
+                    ingredienteEditando.item.unidade_medida,
+                  ))}</strong>
+                </div>
+                <ArrowRight size={17} aria-hidden="true" />
+                <div className="edit-cost-new">
+                  <span>Novo custo estimado</span>
+                  <strong>{custoAtualizado === null ? "—" : formatarMoeda(custoAtualizado)}</strong>
+                </div>
+              </div>
+              {erroEdicao && <p className="form-error edit-modal-error" role="alert"><CircleAlert size={16} />{erroEdicao}</p>}
+              <div className="edit-modal-actions">
                 <button
                   className="button-secondary"
+                  disabled={salvando}
                   type="button"
                   onClick={fecharModalEdicao}
                 >
@@ -472,7 +540,7 @@ export default function MontarPrato({
                 </button>
                 <button
                   className="button-primary"
-                  disabled={salvando}
+                  disabled={salvando || custoAtualizado === null}
                   type="submit"
                 >
                   {salvando ? (
@@ -485,7 +553,7 @@ export default function MontarPrato({
                 </button>
               </div>
             </form>
-          </div>
+          </section>
         </div>
       )}
     </div>

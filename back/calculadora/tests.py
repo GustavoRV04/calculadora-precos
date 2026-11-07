@@ -54,6 +54,77 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
 		self.assertEqual(resposta.data['restaurante']['id'], self.restaurante.id)
 
+	def test_margem_geral_aplica_a_todos_os_pratos_do_comercio(self):
+		prato = Prato.objects.create(
+			nome='Bolo',
+			restaurante=self.restaurante,
+			margem_lucro_percentual='30.00',
+		)
+		outro_prato = Prato.objects.create(
+			nome='Pizza',
+			restaurante=self.restaurante,
+			margem_lucro_percentual='40.00',
+		)
+		prato_de_outro_comercio = Prato.objects.create(
+			nome='Torta',
+			restaurante=self.outro_restaurante,
+			margem_lucro_percentual='50.00',
+		)
+
+		resposta = self.client.patch(
+			'/api/v1/restaurantes/margem-lucro',
+			{'margem_lucro_percentual': '25.50'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(resposta.data['margem_lucro_percentual'], '25.50')
+		self.assertEqual(resposta.data['pratos_atualizados'], 2)
+		self.restaurante.refresh_from_db()
+		prato.refresh_from_db()
+		outro_prato.refresh_from_db()
+		prato_de_outro_comercio.refresh_from_db()
+		self.assertEqual(self.restaurante.margem_lucro_percentual, Decimal('25.50'))
+		self.assertEqual(prato.margem_lucro_percentual, Decimal('25.50'))
+		self.assertEqual(outro_prato.margem_lucro_percentual, Decimal('25.50'))
+		self.assertEqual(prato_de_outro_comercio.margem_lucro_percentual, Decimal('50.00'))
+
+	def test_margem_geral_informa_o_valor_salvo(self):
+		self.restaurante.margem_lucro_percentual = Decimal('35.00')
+		self.restaurante.save(update_fields=['margem_lucro_percentual'])
+
+		resposta = self.client.get('/api/v1/restaurantes/margem-lucro')
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(resposta.data['margem_lucro_percentual'], '35.00')
+
+	def test_margem_geral_rejeita_valor_igual_ou_maior_que_cem(self):
+		resposta = self.client.patch(
+			'/api/v1/restaurantes/margem-lucro',
+			{'margem_lucro_percentual': '100'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
+		self.restaurante.refresh_from_db()
+		self.assertEqual(self.restaurante.margem_lucro_percentual, Decimal('20.00'))
+
+	def test_margem_geral_exige_autenticacao(self):
+		self.client.force_authenticate(user=None)
+
+		resposta = self.client.get('/api/v1/restaurantes/margem-lucro')
+
+		self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
+
+	def test_novo_prato_usa_margem_geral_do_comercio(self):
+		self.restaurante.margem_lucro_percentual = Decimal('35.00')
+		self.restaurante.save(update_fields=['margem_lucro_percentual'])
+
+		resposta = self.client.post('/api/v1/pratos', {'nome': 'Bolo'})
+
+		self.assertEqual(resposta.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(resposta.data['margem_lucro_percentual'], '35.00')
+
 	def test_item_criado_fica_vinculado_ao_produto_do_comercio(self):
 		produto = self.criar_produto('Farinha')
 

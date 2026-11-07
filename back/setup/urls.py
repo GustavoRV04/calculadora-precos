@@ -21,6 +21,7 @@ from calculadora.views import (
     CadastroRestauranteView,
     ItemViewSet,
     LoginRestauranteView,
+    MargemLucroGeralView,
     PratoItemViewSet,
     PratoViewSet,
     ProdutoViewSet,
@@ -42,6 +43,7 @@ router.register('prato-itens', PratoItemViewSet)
 urlpatterns = [
     path('adminsecreto-0jf093jf/', admin.site.urls),
     path('api/v1/restaurantes', CadastroRestauranteView.as_view()),
+    path('api/v1/restaurantes/margem-lucro', MargemLucroGeralView.as_view()),
     path('api/v1/login', LoginRestauranteView.as_view()),
     path('api/v1/', include(router.urls)),
 ]

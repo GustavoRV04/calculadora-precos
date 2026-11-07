@@ -33,6 +33,17 @@ export async function atualizarMargemPrato(pratoId, margem) {
   });
 }
 
+export async function obterMargemGeral() {
+  return requisicaoApi("/restaurantes/margem-lucro");
+}
+
+export async function atualizarMargemGeral(margem) {
+  return requisicaoApi("/restaurantes/margem-lucro", {
+    method: "PATCH",
+    body: { margem_lucro_percentual: margem },
+  });
+}
+
 export async function criarPrato(nome) {
   return requisicaoApi("/pratos", {
     method: "POST",

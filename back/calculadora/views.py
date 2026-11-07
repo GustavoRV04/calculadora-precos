@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
@@ -11,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Item, Prato, PratoItem, Produto, Restaurante
 from .serializers import (
     ItemSerializer,
+    MargemLucroGeralSerializer,
     PratoItemSerializer,
     PratoSerializer,
     ProdutoSerializer,
@@ -62,12 +64,54 @@ class LoginRestauranteView(APIView):
         )
 
 
+class MargemLucroGeralView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_restaurante(self):
+        restaurante = Restaurante.objects.filter(usuario=self.request.user).first()
+        if not restaurante:
+            raise PermissionDenied("Esta conta não possui um comércio associado.")
+        return restaurante
+
+    def get(self, request):
+        restaurante = self.get_restaurante()
+        return Response(MargemLucroGeralSerializer(restaurante).data)
+
+    def patch(self, request):
+        restaurante = self.get_restaurante()
+        serializer = MargemLucroGeralSerializer(
+            restaurante,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            serializer.save()
+            pratos_atualizados = Prato.objects.filter(
+                restaurante=restaurante,
+            ).update(
+                margem_lucro_percentual=restaurante.margem_lucro_percentual,
+            )
+
+        return Response({
+            **serializer.data,
+            "pratos_atualizados": pratos_atualizados,
+        })
+
+
 class RestauranteScopedViewSet(viewsets.ModelViewSet):
     #authentication_classes = [TokenAuthentication]
     #permission_classes = [IsAuthenticated]
 
     def get_restaurante(self):
-        restaurante = Restaurante.objects.first()
+        if self.request.user.is_authenticated:
+            restaurante = Restaurante.objects.filter(
+                usuario=self.request.user,
+            ).first()
+        else:
+            restaurante = Restaurante.objects.first()
         if not restaurante:
             raise PermissionDenied("Esta conta não possui um comércio associado.")
         return restaurante
@@ -111,7 +155,11 @@ class PratoViewSet(RestauranteScopedViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(restaurante=self.get_restaurante())
+        restaurante = self.get_restaurante()
+        serializer.save(
+            restaurante=restaurante,
+            margem_lucro_percentual=restaurante.margem_lucro_percentual,
+        )
 
 
 class PratoItemViewSet(RestauranteScopedViewSet):

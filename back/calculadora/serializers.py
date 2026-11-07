@@ -32,7 +32,20 @@ class RestauranteCadastroSerializer(serializers.Serializer):
 class RestauranteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurante
-        fields = ["id", "nome"]
+        fields = ["id", "nome", "margem_lucro_percentual"]
+
+
+class MargemLucroGeralSerializer(serializers.ModelSerializer):
+    margem_lucro_percentual = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        max_value=Decimal("99.99"),
+    )
+
+    class Meta:
+        model = Restaurante
+        fields = ["margem_lucro_percentual"]
 
 class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:

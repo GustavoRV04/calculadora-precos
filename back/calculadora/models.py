@@ -4,6 +4,11 @@ from django.db import models
 # Create your models here.
 class Restaurante(models.Model):
     nome = models.CharField(max_length=100)
+    margem_lucro_percentual = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=20,
+    )
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

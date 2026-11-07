@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { ChartNoAxesColumnIncreasing, CircleAlert, FileText } from "lucide-react";
-import { atualizarMargemPrato, calcularPrato, listarPratos } from "../services/pratoService";
+import { useEffect, useRef, useState } from "react";
+import { ChartNoAxesColumnIncreasing, CircleAlert, FileText, Percent } from "lucide-react";
+import { atualizarMargemGeral, atualizarMargemPrato, calcularPrato, listarPratos, obterMargemGeral } from "../services/pratoService";
 import { calcularCustoIngrediente, calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
@@ -14,6 +14,12 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
   const [margens, setMargens] = useState({});
   const [errosMargem, setErrosMargem] = useState({});
   const [statusMargem, setStatusMargem] = useState({});
+  const [margemGeral, setMargemGeral] = useState("");
+  const [carregandoMargemGeral, setCarregandoMargemGeral] = useState(true);
+  const [salvandoMargemGeral, setSalvandoMargemGeral] = useState(false);
+  const [erroMargemGeral, setErroMargemGeral] = useState("");
+  const [statusMargemGeral, setStatusMargemGeral] = useState("");
+  const atualizacoesMargemRef = useRef(new Map());
   const pratoId = filtroId || pratoSelecionado || String(pratos[0]?.id ?? "");
   const prato = pratoSelecionadoAsync?.registro ?? pratos.find((registro) => String(registro.id) === String(pratoId));
   const opcaoPrato = pratoSelecionadoAsync ?? (prato ? { value: prato.id, label: prato.nome, registro: prato } : null);
@@ -31,6 +37,24 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
     return { ...pratoItem, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] };
   });
 
+  useEffect(() => {
+    let vigente = true;
+    obterMargemGeral()
+      .then((configuracao) => {
+        if (vigente) setMargemGeral(String(configuracao.margem_lucro_percentual));
+      })
+      .catch((error) => {
+        if (vigente) setErroMargemGeral(error.message);
+      })
+      .finally(() => {
+        if (vigente) setCarregandoMargemGeral(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, []);
+
   function selecionar(opcao) {
     const id = String(opcao?.value ?? "");
     setPratoSelecionadoAsync(opcao);
@@ -44,6 +68,45 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
 
   function opcaoPratoBackend(registro) {
     return { value: registro.id, label: registro.nome, registro };
+  }
+
+  async function aplicarMargemGeral(event) {
+    event.preventDefault();
+    const valor = Number(margemGeral);
+    if (margemGeral.trim() === "" || !Number.isFinite(valor) || valor < 0 || valor >= 100) {
+      setErroMargemGeral("Informe uma margem entre 0% e 99,99%.");
+      setStatusMargemGeral("");
+      return;
+    }
+
+    setSalvandoMargemGeral(true);
+    setErroMargemGeral("");
+    setStatusMargemGeral("");
+    try {
+      await Promise.all(atualizacoesMargemRef.current.values());
+      const resposta = await atualizarMargemGeral(valor);
+      const margemSalva = String(resposta.margem_lucro_percentual);
+      setMargemGeral(margemSalva);
+      if (prato) {
+        const chave = String(prato.id);
+        setMargens((atuais) => ({ ...atuais, [chave]: margemSalva }));
+        setPratoSelecionadoAsync((atual) => atual
+          ? {
+            ...atual,
+            registro: {
+              ...atual.registro,
+              margem_lucro_percentual: margemSalva,
+            },
+          }
+          : atual);
+      }
+      setStatusMargemGeral(`Margem aplicada a ${resposta.pratos_atualizados} ${resposta.pratos_atualizados === 1 ? "prato" : "pratos"}.`);
+      onSaved();
+    } catch (error) {
+      setErroMargemGeral(error.message);
+    } finally {
+      setSalvandoMargemGeral(false);
+    }
   }
 
   async function salvarMargem(pratoAlvo, margemAlvo) {
@@ -68,8 +131,10 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
     if (margemAtual === margemSalva) return;
 
     setStatusMargem((atuais) => ({ ...atuais, [chave]: "Salvando margem..." }));
+    const atualizacao = atualizarMargemPrato(pratoAlvo.id, margemAtual);
+    atualizacoesMargemRef.current.set(chave, atualizacao);
     try {
-      await atualizarMargemPrato(pratoAlvo.id, margemAtual);
+      await atualizacao;
       setStatusMargem((atuais) => ({ ...atuais, [chave]: "Margem salva." }));
       onSaved();
     } catch (error) {
@@ -80,6 +145,9 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
       });
       setStatusMargem((atuais) => ({ ...atuais, [chave]: "" }));
       setErrosMargem((atuais) => ({ ...atuais, [chave]: error.message }));
+      if (atualizacoesMargemRef.current.get(chave) === atualizacao) {
+        atualizacoesMargemRef.current.delete(chave);
+      }
     }
   }
 
@@ -88,6 +156,21 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
       <section className="page-heading">
         <div><p className="eyebrow">ANÁLISE DE CUSTO</p><h1>Ficha técnica</h1><p>Composição e participação de cada ingrediente.</p></div>
         <span className="heading-mark"><FileText size={21} /></span>
+      </section>
+
+      <section className="form-panel general-margin-panel">
+        <div className="panel-title"><span className="section-icon"><Percent size={19} /></span><div><h2>Margem geral</h2><p>Defina a margem para todos os pratos do comércio.</p></div></div>
+        <form className="general-margin-form" onSubmit={aplicarMargemGeral}>
+          <label className="field-label general-margin-field">Margem de lucro geral
+            <span className="percentage-input"><input aria-label="Margem geral de lucro para todos os pratos" disabled={carregandoMargemGeral || salvandoMargemGeral} max="99.99" min="0" onChange={(event) => { setMargemGeral(event.target.value); setErroMargemGeral(""); setStatusMargemGeral(""); }} step="0.01" type="number" value={margemGeral} /><span>%</span></span>
+          </label>
+          <button className="button-primary general-margin-submit" disabled={carregandoMargemGeral || salvandoMargemGeral} type="submit">
+            {salvandoMargemGeral ? <span className="loader-dot" /> : <><Percent size={16} /> Aplicar a todos</>}
+          </button>
+        </form>
+        <p className="field-hint general-margin-hint">Aplicar substitui a margem atual de todos os pratos. Depois, você pode ajustar cada prato individualmente na ficha.</p>
+        {erroMargemGeral && <p className="form-error" role="alert"><CircleAlert size={16} />{erroMargemGeral}</p>}
+        {statusMargemGeral && <p className="field-success" aria-live="polite">{statusMargemGeral}</p>}
       </section>
 
       <section className="form-panel sheet-select-panel">

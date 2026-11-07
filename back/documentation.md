@@ -22,6 +22,7 @@ A base da API REST é `http://localhost:8000/api/v1`. As rotas não usam barra n
 - `GET/POST /produtos`: consulta ou cadastra insumos do comércio autenticado.
 - `GET/POST /itens`: consulta ou registra compras; envie `produto_id`, `preco_custo`, `quantidade_compra` e `unidade_medida`.
 - `GET/POST /pratos`: consulta ou cadastra pratos do comércio autenticado.
+- `GET/PATCH /restaurantes/margem-lucro`: consulta ou altera a margem geral; ao alterar, a nova margem é aplicada a todos os pratos existentes e aos pratos criados depois. As margens individuais podem ser ajustadas novamente pela ficha técnica.
 - `GET/POST /prato-itens`: consulta ou associa um item a um prato; envie `prato_id`, `item_id` e `quantidade`.
 
 Após cadastro/login, envie `Authorization: Token <token>` nas chamadas de produtos, itens, pratos e associações. O servidor identifica o comércio pelo token e impede acesso ou associação a registros de outro comércio.
