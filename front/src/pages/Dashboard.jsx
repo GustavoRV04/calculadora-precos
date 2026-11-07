@@ -1,10 +1,19 @@
 import { BookOpen, ArrowRight, Plus, Search, ShoppingCart, TrendingUp } from "lucide-react";
 import { calcularPrato } from "../services/pratoService";
+import { calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
 import { formatarMoeda } from "../utils/formatacao";
 import Paginacao from "../components/Paginacao";
 
 export default function Dashboard({ pratos, paginacao, busca, carregando, onNavigate, onSelectPrato, onMudarPagina, onBuscar }) {
-  const pratosComCusto = pratos.map((prato) => ({ ...prato, custo: calcularPrato(prato) }));
+  const pratosComCusto = pratos.map((prato) => {
+    const custo = calcularPrato(prato);
+    const precoVenda = calcularPrecoVendaComMargem(
+      custo,
+      prato.margem_lucro_percentual ?? 20,
+    );
+    const lucro = precoVenda === null ? null : Number((precoVenda - custo).toFixed(2));
+    return { ...prato, custo, precoVenda, lucro };
+  });
   const custoMedio = pratosComCusto.length
     ? pratosComCusto.reduce((total, prato) => total + prato.custo, 0) / pratosComCusto.length
     : 0;
@@ -65,7 +74,11 @@ export default function Dashboard({ pratos, paginacao, busca, carregando, onNavi
                   <h3>{prato.nome}</h3>
                   <p>{prato.prato_itens?.length ?? 0} {(prato.prato_itens?.length ?? 0) === 1 ? "ingrediente" : "ingredientes"}</p>
                 </div>
-                <div className="dish-cost"><span>Custo total</span><strong>{formatarMoeda(prato.custo)}</strong></div>
+                <div className="dish-pricing">
+                  <div className="dish-metric dish-metric-cost"><span>Custo de produção</span><strong>{formatarMoeda(prato.custo)}</strong></div>
+                  <div className="dish-metric dish-metric-sale"><span>Preço sugerido</span><strong>{prato.precoVenda === null ? "—" : formatarMoeda(prato.precoVenda)}</strong></div>
+                  <div className="dish-metric dish-metric-profit"><span>Lucro por venda</span><strong>{prato.lucro === null ? "—" : formatarMoeda(prato.lucro)}</strong></div>
+                </div>
                 <button className="text-action" type="button" onClick={() => { onSelectPrato(prato.id); onNavigate("ficha"); }}>
                   Ver ficha <ArrowRight size={16} />
                 </button>

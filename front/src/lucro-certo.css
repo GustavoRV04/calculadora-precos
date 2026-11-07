@@ -93,9 +93,17 @@ input, select { min-width: 0; }
 .dish-main, .purchase-main, .ingredient-main, .breakdown-main { min-width: 0; flex: 1; }
 .dish-main h3, .purchase-main h3, .ingredient-main h3, .breakdown-main h3 { overflow: hidden; margin: 0; color: var(--ink); font-size: 15px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .dish-main p, .purchase-main p, .ingredient-main p, .breakdown-main p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-.dish-cost { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 93px; }
 .dish-cost span, .sheet-total span { color: var(--muted); font-size: 11px; }
-.dish-cost strong { color: var(--ink); font-family: Manrope,sans-serif; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dish-pricing { display: grid; flex: 0 1 420px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.dish-metric { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 10px; border-radius: 10px; }
+.dish-metric span { color: var(--muted); font-size: 10px; line-height: 1.25; }
+.dish-metric strong { font-family: Manrope,sans-serif; font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dish-metric-cost { background: var(--surface-low); }
+.dish-metric-cost strong { color: var(--primary); }
+.dish-metric-sale { background: #e7f8f0; }
+.dish-metric-sale strong { color: var(--green); }
+.dish-metric-profit { background: #d9f5e8; }
+.dish-metric-profit strong { color: #005b3d; }
 .text-action { display: inline-flex; align-items: center; gap: 4px; padding: 7px 9px; color: var(--primary); background: var(--primary-pale); border: 0; border-radius: 9px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .text-action:hover { background: var(--surface-high); }
 .empty-state { display: flex; min-height: 190px; flex-direction: column; align-items: center; justify-content: center; padding: 22px; color: var(--muted); text-align: center; background: rgba(255,255,255,.74); border: 1px dashed #d1dbee; border-radius: 15px; }
@@ -154,7 +162,7 @@ input, select { min-width: 0; }
 .sheet-hero-title { display: flex; align-items: center; gap: 10px; }
 .sheet-hero-title h2 { overflow: hidden; margin: 0; font-family: Manrope,sans-serif; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
 .sheet-hero-title p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-.sheet-pricing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr); align-items: stretch; gap: 10px; }
+.sheet-pricing { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: stretch; gap: 10px; }
 .sheet-margin { justify-content: center; padding: 13px; background: var(--surface-low); border-radius: 11px; }
 .percentage-input { position: relative; display: flex; align-items: center; }
 .percentage-input input { width: 100%; min-height: 47px; padding: 10px 36px 10px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 16px; font-weight: 700; }
@@ -163,10 +171,12 @@ input, select { min-width: 0; }
 .field-success { color: var(--muted); font-size: 11px; font-weight: 500; }
 .field-success { color: var(--green); }
 .field-error { display: flex; align-items: center; gap: 4px; color: var(--danger); font-size: 11px; font-weight: 600; }
-.sheet-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px; background: var(--surface-low); border-radius: 11px; }
-.sheet-total strong { color: var(--primary); font-family: Manrope,sans-serif; font-size: 28px; font-weight: 800; white-space: nowrap; }
+.sheet-total { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; gap: 7px; padding: 13px; background: var(--surface-low); border-radius: 11px; }
+.sheet-total strong { max-width: 100%; color: var(--primary); font-family: Manrope,sans-serif; font-size: clamp(17px,5vw,25px); font-weight: 800; overflow-wrap: anywhere; }
 .sheet-sale-price { background: #e7f8f0; }
 .sheet-sale-price strong { color: var(--green); }
+.sheet-profit { background: #d9f5e8; }
+.sheet-profit strong { color: #005b3d; }
 .sheet-note { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 12px; }
 .sheet-note svg { color: var(--green); }
 .breakdown-panel { gap: 14px; padding: 17px; }
@@ -211,6 +221,7 @@ input, select { min-width: 0; }
   .page-stack { gap: 20px; }
   .metric-card { min-height: 150px; padding: 19px; }
   .form-panel, .sheet-hero, .breakdown-panel { padding: 21px; }
+  .sheet-pricing { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
   .dish-card, .purchase-row, .ingredient-row { padding: 16px; }
 }
 @media (max-width:560px) {
@@ -237,7 +248,10 @@ input, select { min-width: 0; }
   .dish-card { flex-wrap: wrap; gap: 9px; padding: 12px; }
   .dish-icon { width: 38px; height: 38px; }
   .dish-main { flex-basis: calc(100% - 54px); }
-  .dish-cost { margin-left: 47px; align-items: flex-start; }
+  .dish-pricing { flex-basis: calc(100% - 47px); grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; margin-left: 47px; }
+  .dish-metric { padding: 7px 8px; }
+  .dish-metric span { font-size: 9px; }
+  .dish-metric strong { font-size: 12px; }
   .text-action { margin-left: auto; }
   .form-panel { gap: 14px; padding: 15px; }
   .form-grid { grid-template-columns: 1fr; gap: 13px; }
@@ -252,8 +266,8 @@ input, select { min-width: 0; }
   .total-banner { padding: 13px; }
   .total-banner strong { font-size: 21px; }
   .sheet-hero { padding: 14px; }
-  .sheet-pricing { grid-template-columns: 1fr; }
-  .sheet-total strong { font-size: 25px; }
+  .sheet-pricing { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .sheet-total { padding: 11px; }
   .breakdown-panel { padding: 14px; }
   .breakdown-row { gap: 8px; padding: 9px; }
   .breakdown-main h3 { max-width: 42vw; font-size: 12px; }

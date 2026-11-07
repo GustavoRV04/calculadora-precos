@@ -35,5 +35,6 @@ export function calcularPrecoVendaComMargem(custo, margemPercentual) {
   }
 
   const precoExato = custoNumerico / (1 - percentual / 100);
+  if (precoExato === 0) return 0;
   return Math.ceil(precoExato * 100 - 1e-8) / 100;
 }

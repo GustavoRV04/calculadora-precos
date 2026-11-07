@@ -25,6 +25,7 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
   const margemNumerica = Number(margem);
   const margemValida = margem.trim() !== "" && Number.isFinite(margemNumerica) && margemNumerica >= 0 && margemNumerica < 100;
   const precoVenda = margemValida ? calcularPrecoVendaComMargem(total, margemNumerica) : null;
+  const lucroPorVenda = precoVenda === null ? null : Number((precoVenda - total).toFixed(2));
   const linhas = (prato?.prato_itens ?? []).map((pratoItem, index) => {
     const custo = calcularCustoIngrediente(pratoItem.item.preco_custo, pratoItem.item.quantidade_compra, pratoItem.quantidade, pratoItem.item.unidade_medida);
     return { ...pratoItem, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] };
@@ -109,8 +110,9 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
               </label>
               <div className="sheet-total"><span>Custo de produção</span><strong>{formatarMoeda(total)}</strong></div>
               <div className="sheet-total sheet-sale-price"><span>Preço de venda sugerido</span><strong>{precoVenda === null ? "—" : formatarMoeda(precoVenda)}</strong></div>
+              <div className="sheet-total sheet-profit"><span>Lucro por venda</span><strong>{lucroPorVenda === null ? "—" : formatarMoeda(lucroPorVenda)}</strong></div>
             </div>
-            <p className="sheet-note"><ChartNoAxesColumnIncreasing size={16} /> Calculado a partir das últimas compras registradas.</p>
+            <p className="sheet-note"><ChartNoAxesColumnIncreasing size={16} /> Lucro estimado: preço sugerido menos custo de produção; outras despesas não incluídas.</p>
           </section>
 
           <section className="form-panel breakdown-panel">
