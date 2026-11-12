@@ -42,6 +42,7 @@ const paginacaoVazia = {
 };
 
 export default function App() {
+  const [temaEscuro, setTemaEscuro] = useState(() => localStorage.getItem("lucro-certo-theme") === "dark");
   const [sessao, setSessao] = useState(() => obterSessao());
   const [secao, setSecao] = useState("dashboard");
   const [versaoDados, setVersaoDados] = useState(0);
@@ -59,6 +60,11 @@ export default function App() {
   const [buscaPratosAplicada, setBuscaPratosAplicada] = useState("");
   const [buscaItens, setBuscaItens] = useState("");
   const [buscaItensAplicada, setBuscaItensAplicada] = useState("");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = temaEscuro ? "dark" : "light";
+    localStorage.setItem("lucro-certo-theme", temaEscuro ? "dark" : "light");
+  }, [temaEscuro]);
 
   useEffect(() => {
     const temporizador = setTimeout(() => {
@@ -238,12 +244,12 @@ export default function App() {
   }
 
   if (!sessao) {
-    return <CommerceAccess onAuthenticated={setSessao} />;
+    return <CommerceAccess onAuthenticated={setSessao} temaEscuro={temaEscuro} onToggleTema={() => setTemaEscuro((atual) => !atual)} />;
   }
 
   return (
     <div className="app-shell">
-      <Header restaurante={sessao.restaurante} onLogout={sair} />
+      <Header restaurante={sessao.restaurante} onLogout={sair} temaEscuro={temaEscuro} onToggleTema={() => setTemaEscuro((atual) => !atual)} />
       <main className="main-content">
         {erroApi && (
           <div className="notice-error" role="alert">

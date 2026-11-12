@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ArrowRight, CookingPot, LoaderCircle, LockKeyhole, Mail, Store } from "lucide-react";
+import { ArrowRight, CookingPot, LoaderCircle, LockKeyhole, Mail, Moon, Store, Sun } from "lucide-react";
 import { cadastrarRestaurante, entrarNoRestaurante } from "../services/restauranteService";
 
-export default function CommerceAccess({ onAuthenticated }) {
+export default function CommerceAccess({ onAuthenticated, temaEscuro, onToggleTema }) {
   const [modo, setModo] = useState("entrar");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -29,7 +29,10 @@ export default function CommerceAccess({ onAuthenticated }) {
   return (
     <main className="access-screen">
       <section className="access-panel">
-        <div className="access-brand"><span className="brand-mark brand-mark-large"><CookingPot size={24} strokeWidth={2.4} /></span><span className="brand-name">lucro<span>certo</span></span></div>
+        <div className="access-topline">
+          <div className="access-brand"><span className="brand-mark brand-mark-large"><CookingPot size={24} strokeWidth={2.4} /></span><span className="brand-name">lucro<span>certo</span></span></div>
+          <button className="icon-button" type="button" onClick={onToggleTema} aria-label={temaEscuro ? "Ativar modo claro" : "Ativar modo escuro"} title={temaEscuro ? "Modo claro" : "Modo escuro"}>{temaEscuro ? <Sun size={18} /> : <Moon size={18} />}</button>
+        </div>
         <div className="access-heading"><p className="eyebrow">GESTÃO DE CUSTOS</p><h1>{modo === "cadastro" ? "Cadastre seu comércio" : "Acesse seu comércio"}</h1><p>Organize compras, receitas e custos em um só lugar.</p></div>
         <div className="access-switch" role="tablist" aria-label="Acesso ou cadastro">
           <button type="button" role="tab" aria-selected={modo === "entrar"} className={modo === "entrar" ? "active" : ""} onClick={() => { setModo("entrar"); setErro(""); }}>Entrar</button>
