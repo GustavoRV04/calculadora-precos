@@ -40,6 +40,7 @@ button, input, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .68; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(29, 78, 216, .24); outline-offset: 2px; }
+input:focus, select:focus { box-shadow: none; }
 input, select { min-width: 0; }
 #root { display: block; width: 100%; max-width: none; min-height: 100vh; }
 .app-shell { min-height: 100vh; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
@@ -86,7 +87,8 @@ input, select { min-width: 0; }
 .list-toolbar p, .panel-title p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
 .search-box { display: flex; width: min(100%,270px); min-height: 42px; align-items: center; gap: 8px; padding: 0 12px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 11px; }
 .search-box input { width: 100%; padding: 8px 0; color: var(--ink); background: transparent; border: 0; outline: 0; font-size: 13px; }
-.search-box input:focus-visible { outline: 0; }
+.search-box input:focus, .search-box input:focus-visible, .money-input input:focus, .money-input input:focus-visible { border: 0; outline: 0; box-shadow: none; }
+.search-box:focus-within, .money-input:focus-within, .input-wrap:focus-within { border-color: var(--primary-bright); box-shadow: 0 0 0 3px rgba(29,78,216,.16); }
 .dish-list, .purchase-list, .ingredient-list, .breakdown-list { display: flex; flex-direction: column; gap: 9px; }
 .dish-card, .purchase-row, .ingredient-row { display: flex; align-items: center; gap: 12px; padding: 14px; }
 .dish-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; color: var(--primary); background: var(--primary-pale); border-radius: 12px; }
@@ -153,6 +155,7 @@ input, select { min-width: 0; }
 .field-label > input, .field-label > select, .inline-create > input, .input-wrap input, .quantity-fields > input, .quantity-fields > select { width: 100%; min-height: 47px; padding: 10px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; font-weight: 500; }
 .async-select__control { min-height: 47px !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important; }
 .async-select__control--is-focused { border-color: var(--primary-bright) !important; box-shadow: 0 0 0 3px rgba(29,78,216,.12) !important; }
+.async-select__input-container input:focus, .async-select__input-container input:focus-visible { border: 0 !important; outline: 0 !important; box-shadow: none !important; }
 .async-select__menu { z-index: 20 !important; }
 .field-label > input::placeholder, .inline-create > input::placeholder { color: #929bad; }
 .field-label > input:focus, .field-label > select:focus, .inline-create > input:focus, .input-wrap input:focus, .quantity-fields > input:focus, .quantity-fields > select:focus { border-color: var(--primary-bright); outline: 3px solid rgba(29,78,216,.12); }
@@ -160,7 +163,6 @@ input, select { min-width: 0; }
 .money-input { display: flex; min-height: 47px; align-items: center; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
 .money-input > span { display: grid; min-width: 46px; align-self: stretch; place-items: center; color: var(--muted); background: var(--surface-low); font-size: 14px; font-weight: 700; }
 .money-input input { width: 100%; min-height: 45px; padding: 10px 12px; border: 0; background: transparent; font-size: 14px; }
-.money-input input:focus-visible { outline: 0; }
 .quantity-fields { display: grid; grid-template-columns: minmax(80px,1fr) minmax(145px,1fr); gap: 7px; }
 .cost-preview { display: flex; min-height: 66px; align-items: center; gap: 11px; padding: 12px; color: var(--primary); background: var(--surface-low); border-radius: 12px; }
 .preview-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; color: var(--green); background: var(--mint); border-radius: 50%; }
@@ -238,7 +240,7 @@ input, select { min-width: 0; }
 .access-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 18px; padding: 4px; background: var(--surface-low); border-radius: 11px; }
 .access-form { display: flex; flex-direction: column; gap: 14px; }
 .input-wrap { display: flex; min-height: 47px; align-items: center; gap: 9px; padding: 0 12px; color: var(--outline); background: #fff; border: 1px solid var(--line); border-radius: 10px; }
-.input-wrap:focus-within { border-color: var(--primary-bright); outline: 3px solid rgba(29,78,216,.12); }
+.input-wrap:focus-within { border-color: var(--primary-bright); }
 .input-wrap input { width: 100%; min-height: 42px; padding: 7px 0; border: 0; background: transparent; font-size: 14px; }
 .input-wrap input:focus, .input-wrap input:focus-visible { border: 0; outline: 0; box-shadow: none; }
 .access-submit { width: 100%; margin-top: 3px; }
