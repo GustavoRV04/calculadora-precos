@@ -337,7 +337,16 @@ input, select { min-width: 0; }
 }
 :root[data-theme="dark"] body { background-image: linear-gradient(rgba(145,180,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(145,180,255,.025) 1px,transparent 1px); }
 :root[data-theme="dark"] .topbar { background: rgba(17,24,39,.94); border-color: var(--line); }
-:root[data-theme="dark"] .commerce-chip { color: var(--primary); background: var(--primary-pale); }
+:root[data-theme="dark"] .commerce-chip { color: #e2e8f0; background: var(--primary-pale); }
+:root[data-theme="dark"] .commerce-chip svg { color: #e2e8f0; }
+:root[data-theme="dark"] .brand-mark,
+:root[data-theme="dark"] .heading-mark,
+:root[data-theme="dark"] .dish-icon,
+:root[data-theme="dark"] .empty-icon,
+:root[data-theme="dark"] .section-icon { color: #0037b0; background: #d1d5db; }
+:root[data-theme="dark"] .panel-title p { color: var(--ink); }
+:root[data-theme="dark"] .list-toolbar h2,
+:root[data-theme="dark"] .panel-title h2 { color: var(--ink); }
 :root[data-theme="dark"] .preview-icon { color: #005b3d; }
 :root[data-theme="dark"] .button-primary { background: #0037b0; }
 :root[data-theme="dark"] .button-primary:hover:not(:disabled) { background: #1d4ed8; }
