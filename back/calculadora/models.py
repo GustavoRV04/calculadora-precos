@@ -1,5 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import F
+from django.db.models.functions import Lower, Trim
+from django.utils import timezone
 
 # Create your models here.
 class Restaurante(models.Model):
@@ -29,6 +32,15 @@ class Produto(models.Model):
         related_name="produtos",
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower(Trim("nome")),
+                F("restaurante"),
+                name="produto_nome_normalizado_restaurante_uniq",
+            ),
+        ]
+
 class Item(models.Model):
     produto = models.ForeignKey(
         Produto,
@@ -38,6 +50,7 @@ class Item(models.Model):
     preco_custo = models.DecimalField(max_digits=10, decimal_places=2)
     unidade_medida = models.CharField(max_length=20) # Ex: gramas, ml, unidade
     quantidade_compra = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantidade comprada do prato")
+    criado_em = models.DateTimeField(null=True, blank=True, default=timezone.now)
 
     def __str__(self):
         return self.produto.nome

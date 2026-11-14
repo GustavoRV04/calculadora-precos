@@ -140,6 +140,94 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(item.produto, produto)
 		self.assertEqual(item.produto.restaurante, self.restaurante)
 		self.assertEqual(resposta.data['produto']['nome'], 'Farinha')
+		self.assertIsNotNone(resposta.data['criado_em'])
+
+	def test_cadastrar_produto_duplicado_reutiliza_o_insumo_existente(self):
+		produto_existente = self.criar_produto('Pão')
+
+		resposta = self.client.post('/api/v1/produtos', {'nome': '  pão  '})
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(resposta.data['id'], produto_existente.id)
+		self.assertEqual(Produto.objects.filter(restaurante=self.restaurante).count(), 1)
+
+	def test_nova_compra_de_produto_existente_preserva_historico_no_mesmo_insumo(self):
+		produto_existente = self.criar_produto('Pão')
+		compra_anterior = Item.objects.create(
+			produto=produto_existente,
+			preco_custo='20.00',
+			quantidade_compra='1000',
+			unidade_medida='G',
+		)
+
+		produto_resposta = self.client.post('/api/v1/produtos', {'nome': 'PÃO'})
+		compra_resposta = self.client.post('/api/v1/itens', {
+			'produto_id': produto_resposta.data['id'],
+			'preco_custo': '25.00',
+			'quantidade_compra': '500',
+			'unidade_medida': 'G',
+		})
+		historico_resposta = self.client.get('/api/v1/itens')
+		itens_atuais_resposta = self.client.get('/api/v1/itens?atuais=true')
+
+		self.assertEqual(produto_resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(compra_resposta.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(historico_resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(itens_atuais_resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(Produto.objects.filter(restaurante=self.restaurante).count(), 1)
+		self.assertEqual(Item.objects.filter(produto=produto_existente).count(), 2)
+		self.assertTrue(Item.objects.filter(pk=compra_anterior.pk).exists())
+		self.assertNotEqual(compra_resposta.data['id'], compra_anterior.id)
+		self.assertEqual(compra_resposta.data['produto']['id'], produto_existente.id)
+		self.assertIsNotNone(compra_resposta.data['criado_em'])
+		itens = historico_resposta.data.get('results', historico_resposta.data)
+		self.assertEqual(itens[0]['id'], compra_resposta.data['id'])
+		itens_atuais = itens_atuais_resposta.data.get(
+			'results',
+			itens_atuais_resposta.data,
+		)
+		self.assertEqual(len(itens_atuais), 1)
+		self.assertEqual(itens_atuais[0]['id'], compra_resposta.data['id'])
+
+	def test_nova_compra_atualiza_custo_da_receita_sem_apagar_historico(self):
+		produto = self.criar_produto('Farinha')
+		compra_anterior = Item.objects.create(
+			produto=produto,
+			preco_custo='10.00',
+			quantidade_compra='1000',
+			unidade_medida='G',
+		)
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
+		PratoItem.objects.create(prato=prato, item=compra_anterior, quantidade='500')
+
+		compra_resposta = self.client.post('/api/v1/itens', {
+			'produto_id': produto.id,
+			'preco_custo': '20.00',
+			'quantidade_compra': '1000',
+			'unidade_medida': 'G',
+		})
+		prato_resposta = self.client.get(f'/api/v1/pratos/{prato.id}')
+
+		self.assertEqual(compra_resposta.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(Item.objects.filter(produto=produto).count(), 2)
+		self.assertEqual(
+			prato_resposta.data['prato_itens'][0]['item']['preco_custo'],
+			'20.00',
+		)
+		self.assertEqual(
+			prato_resposta.data['prato_itens'][0]['item']['id'],
+			compra_resposta.data['id'],
+		)
+
+	def test_mesmo_nome_de_insumo_e_permitido_em_comercios_diferentes(self):
+		self.criar_produto('Pão')
+		outro = self.criar_produto('Pão', self.outro_restaurante)
+
+		resposta = self.client.post('/api/v1/produtos', {'nome': 'PÃO'})
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertNotEqual(resposta.data['id'], outro.id)
+		self.assertEqual(Produto.objects.filter(nome__iexact='pão').count(), 2)
 
 	def test_cadastro_de_item_rejeita_unidade_nao_suportada(self):
 		produto = self.criar_produto('Farinha')

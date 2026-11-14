@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.db.models import F, OuterRef, Subquery
+from django.db.models.functions import Lower, Trim
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
@@ -126,6 +128,49 @@ class ProdutoViewSet(RestauranteScopedViewSet):
     def get_queryset(self):
         return Produto.objects.filter(restaurante=self.get_restaurante())
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        nome = serializer.validated_data["nome"]
+        restaurante = self.get_restaurante()
+
+        with transaction.atomic():
+            restaurante = Restaurante.objects.select_for_update().get(pk=restaurante.pk)
+            produto_existente = self._produto_por_nome(restaurante, nome)
+            if produto_existente:
+                return Response(
+                    self.get_serializer(produto_existente).data,
+                    status=status.HTTP_200_OK,
+                )
+
+            try:
+                with transaction.atomic():
+                    produto = serializer.save(restaurante=restaurante)
+            except IntegrityError:
+                produto = self._produto_por_nome(restaurante, nome)
+                if produto is None:
+                    raise
+                return Response(
+                    self.get_serializer(produto).data,
+                    status=status.HTTP_200_OK,
+                )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )
+
+    @staticmethod
+    def _produto_por_nome(restaurante, nome):
+        return Produto.objects.annotate(
+            nome_normalizado=Lower(Trim("nome")),
+        ).filter(
+            restaurante=restaurante,
+            nome_normalizado=nome.strip().lower(),
+        ).first()
+
     def perform_create(self, serializer):
         serializer.save(restaurante=self.get_restaurante())
 
@@ -137,7 +182,21 @@ class ItemViewSet(RestauranteScopedViewSet):
     search_fields = ["produto__nome"]
 
     def get_queryset(self):
-        return Item.objects.filter(produto__restaurante=self.get_restaurante())
+        queryset = Item.objects.filter(
+            produto__restaurante=self.get_restaurante(),
+        )
+        if self.request.query_params.get("atuais") == "true":
+            item_mais_recente = Item.objects.filter(
+                produto_id=OuterRef("produto_id"),
+            ).order_by(
+                F("criado_em").desc(nulls_last=True),
+                "-id",
+            ).values("id")[:1]
+            queryset = queryset.filter(pk=Subquery(item_mais_recente))
+        return queryset.order_by(
+            F("criado_em").desc(nulls_last=True),
+            "-id",
+        )
 
 
 class PratoViewSet(RestauranteScopedViewSet):

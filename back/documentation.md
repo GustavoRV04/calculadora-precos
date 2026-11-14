@@ -20,11 +20,13 @@ A base da API REST é `http://localhost:8000/api/v1`. As rotas não usam barra n
 - `POST /restaurantes`: cria um comércio. Envie `nome`, `email` e `senha` (mínimo de 8 caracteres); a resposta contém `token` e `restaurante`.
 - `POST /login`: inicia sessão com `email` e `senha`; devolve `token` e `restaurante`.
 - `GET/POST /produtos`: consulta ou cadastra insumos do comércio autenticado.
-- `GET/POST /itens`: consulta ou registra compras; envie `produto_id`, `preco_custo`, `quantidade_compra` e `unidade_medida`.
+- `GET/POST /itens`: consulta ou registra compras; envie `produto_id`, `preco_custo`, `quantidade_compra` e `unidade_medida`. Cada compra fica como um registro histórico com data, vinculado ao produto existente. Use `GET /itens?atuais=true` para listar somente a compra mais recente de cada insumo.
 - `GET/POST /pratos`: consulta ou cadastra pratos do comércio autenticado.
 - `GET/PATCH /restaurantes/margem-lucro`: consulta ou altera a margem geral; ao alterar, a nova margem é aplicada a todos os pratos existentes e aos pratos criados depois. As margens individuais podem ser ajustadas novamente pela ficha técnica.
 - `GET/POST /prato-itens`: consulta ou associa um item a um prato; envie `prato_id`, `item_id` e `quantidade`.
 
 Após cadastro/login, envie `Authorization: Token <token>` nas chamadas de produtos, itens, pratos e associações. O servidor identifica o comércio pelo token e impede acesso ou associação a registros de outro comércio.
+
+Os nomes dos insumos são únicos por comércio, sem diferenciar maiúsculas/minúsculas ou espaços nas extremidades. Ao cadastrar um insumo já existente, a API retorna o cadastro existente para que a nova compra seja registrada nele. A migração 0010 consolida cadastros duplicados já existentes, preservando suas compras. A listagem de compras exibe as mais recentes primeiro e as fichas técnicas passam a usar o custo da compra mais recente do insumo, sem remover os registros antigos do histórico.
 
 O SQLite é usado por padrão e não requer configuração adicional. `python manage.py migrate` deve ser executado após atualizar o projeto ou clonar o repositório pela primeira vez. Em ambientes que usam PostgreSQL, configure `POSTGRES_URL_NON_POOLING` (preferida para migrações) ou `POSTGRES_URL`. No Vercel, uma dessas variáveis é obrigatória; localmente, sem elas, o backend usa o arquivo `back/db.sqlite3`.

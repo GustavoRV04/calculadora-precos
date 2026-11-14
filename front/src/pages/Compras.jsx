@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, CircleAlert, PackagePlus, Plus, ReceiptText, Search } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, PackagePlus, Plus, ReceiptText, Search } from "lucide-react";
 import { criarItem, criarProduto, listarProdutos } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
@@ -77,23 +77,38 @@ export default function Compras({ busca, itens, paginacao, carregando, onBuscar,
 
       <section className="form-panel">
         <div className="panel-title"><span className="section-icon"><PackagePlus size={19} /></span><div><h2>Nova entrada de compra</h2><p>A compra ficará vinculada ao insumo escolhido.</p></div></div>
-        <div className="segmented-control" role="group" aria-label="Escolher tipo de insumo">
-          <button type="button" className={origemProduto === "existente" ? "selected" : ""} onClick={() => { setOrigemProduto("existente"); setErro(""); }}>Insumo cadastrado</button>
-          <button type="button" className={origemProduto === "novo" ? "selected" : ""} onClick={() => { setOrigemProduto("novo"); setErro(""); }}>Novo insumo</button>
-        </div>
         <form className="form-grid" onSubmit={salvar}>
           {origemProduto === "novo" ? (
-            <label className="field-label field-span">
-              Nome do insumo
-              <input required maxLength={100} value={nomeProduto} onChange={(event) => setNomeProduto(event.target.value)} placeholder="Ex.: Queijo cheddar" />
-            </label>
+            <div className="field-label field-span">
+              <div className="purchase-product-label">
+                <span>Novo insumo</span>
+                <button className="inline-link" type="button" onClick={() => { setOrigemProduto("existente"); setNomeProduto(""); setErro(""); }}>
+                  <ArrowLeft size={15} /> Escolher cadastrado
+                </button>
+              </div>
+              <input aria-label="Nome do novo insumo" autoFocus maxLength={100} required value={nomeProduto} onChange={(event) => setNomeProduto(event.target.value)} placeholder="Ex.: Queijo cheddar" />
+            </div>
           ) : (
-            <>
-              <label className="field-label field-span">
-                Insumo da despensa
-                <SelectBackendPaginado buscarPagina={buscarProdutos} inputId="produto" noOptionsMessage="Nenhum insumo encontrado" onChange={setProdutoSelecionado} paraOpcao={(produto) => ({ value: produto.id, label: produto.nome })} placeholder="Busque um insumo" value={produtoSelecionado} />
-              </label>
-            </>
+            <label className="field-label field-span">
+              Insumo da despensa
+              <SelectBackendPaginado
+                buscarPagina={buscarProdutos}
+                formatCreateLabel={(valor) => <span className="create-product-option"><Plus size={15} /> Adicionar “{valor.trim()}” como novo insumo</span>}
+                inputId="produto"
+                noOptionsMessage="Nenhum insumo encontrado"
+                onChange={(opcao) => { setProdutoSelecionado(opcao); setErro(""); }}
+                onCreateOption={(valor) => {
+                  setNomeProduto(valor.trim());
+                  setOrigemProduto("novo");
+                  setProdutoSelecionado(null);
+                  setErro("");
+                }}
+                paraOpcao={(produto) => ({ value: produto.id, label: produto.nome })}
+                placeholder="Busque ou adicione um insumo"
+                value={produtoSelecionado}
+              />
+              <span className="field-hint">Selecione um insumo ou digite um nome e escolha “Adicionar”.</span>
+            </label>
           )}
           <label className="field-label">
             Preço pago
@@ -124,13 +139,13 @@ export default function Compras({ busca, itens, paginacao, carregando, onBuscar,
         <Paginacao paginacao={paginacao.itens} rotulo="compras" onAnterior={() => onMudarPagina("itens", -1)} onProxima={() => onMudarPagina("itens", 1)} />
         {itens.length ? (
           <div className="purchase-list">
-            {[...itens].reverse().map((item) => {
+            {itens.map((item) => {
               const unitCost = calcularCustoIngrediente(item.preco_custo, item.quantidade_compra, 1, item.unidade_medida);
               const base = unidadeBase(item.unidade_medida);
               return (
                 <article className="purchase-row" key={item.id}>
                   <span className="dish-icon"><ReceiptText size={20} /></span>
-                  <div className="purchase-main"><h3>{item.produto?.nome}</h3><p>Comprado: {formatarQuantidade(item.quantidade_compra)} {item.unidade_medida}</p><p>Pago: {formatarMoeda(item.preco_custo)}</p></div>
+                  <div className="purchase-main"><h3>{item.produto?.nome}</h3><p>Comprado: {formatarQuantidade(item.quantidade_compra)} {item.unidade_medida}</p><p>Pago: {formatarMoeda(item.preco_custo)}</p><p>{item.criado_em ? `Registrado em ${new Date(item.criado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : "Data não registrada"}</p></div>
                   <div className="dish-cost"><span>Custo unitário</span><strong>{formatarCustoUnitario(unitCost)} / {base.toLowerCase()}</strong></div>
                 </article>
               );

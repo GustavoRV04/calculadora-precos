@@ -19,7 +19,7 @@ import {
   pratoPorId,
   removerIngrediente,
 } from "../services/pratoService";
-import { listarItens } from "../services/produtoService";
+import { listarItensAtuais } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
@@ -114,7 +114,7 @@ export default function MontarPrato({
   }
 
   function buscarItens(busca, offset) {
-    return listarItens(offset, busca);
+    return listarItensAtuais(offset, busca);
   }
 
   function opcaoPrato(registro) {

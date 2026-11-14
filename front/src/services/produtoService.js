@@ -20,6 +20,10 @@ export async function listarItens(offset = 0, search = "") {
   return requisicaoApi(caminhoPaginado("itens", offset, search));
 }
 
+export async function listarItensAtuais(offset = 0, search = "") {
+  return requisicaoApi(`${caminhoPaginado("itens", offset, search)}&atuais=true`);
+}
+
 export async function criarProduto(nome) {
   return requisicaoApi("/produtos", {
     method: "POST",

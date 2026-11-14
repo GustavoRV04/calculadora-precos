@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import F
 from rest_framework import serializers
 from .models import Item, Prato, PratoItem, Produto, Restaurante
 
@@ -48,6 +49,12 @@ class MargemLucroGeralSerializer(serializers.ModelSerializer):
         fields = ["margem_lucro_percentual"]
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    def validate_nome(self, value):
+        nome = value.strip()
+        if not nome:
+            raise serializers.ValidationError("Informe o nome do insumo.")
+        return nome
+
     class Meta:
         model = Produto
         fields = ["id", "nome", "restaurante_id"]
@@ -81,7 +88,9 @@ class ItemSerializer(serializers.ModelSerializer):
             "preco_custo",
             "unidade_medida",
             "quantidade_compra",
+            "criado_em",
         ]
+        read_only_fields = ["criado_em"]
 
     def get_fields(self):
         fields = super().get_fields()
@@ -93,7 +102,7 @@ class ItemSerializer(serializers.ModelSerializer):
         return fields
 
 class PratoItemSerializer(serializers.ModelSerializer):
-    item = ItemSerializer(read_only=True)
+    item = serializers.SerializerMethodField()
     item_id = serializers.PrimaryKeyRelatedField(
         source='item',
         queryset=Item.objects.all(),
@@ -114,6 +123,20 @@ class PratoItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PratoItem
         fields = ["id", "prato", "prato_id", "item", "item_id", "quantidade"]
+
+    def get_item(self, obj):
+        produto_id = obj.item.produto_id
+        itens_atuais = self.context.setdefault("_itens_atuais_por_produto", {})
+        if produto_id not in itens_atuais:
+            itens_atuais[produto_id] = (
+                Item.objects.filter(produto_id=produto_id)
+                .order_by(F("criado_em").desc(nulls_last=True), "-id")
+                .first()
+            )
+        return ItemSerializer(
+            itens_atuais[produto_id],
+            context=self.context,
+        ).data
 
     def get_fields(self):
         fields = super().get_fields()

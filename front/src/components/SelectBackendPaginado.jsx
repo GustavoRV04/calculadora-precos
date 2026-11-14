@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
 
 const ATRASO_BUSCA_MS = 300;
 
-export default function SelectBackendPaginado({ buscarPagina, paraOpcao, noOptionsMessage, opcaoAtualizada, ...props }) {
+export default function SelectBackendPaginado({ buscarPagina, paraOpcao, noOptionsMessage, opcaoAtualizada, onCreateOption, formatCreateLabel, ...props }) {
   const [opcoes, setOpcoes] = useState([]);
   const [busca, setBusca] = useState("");
   const [proximaPagina, setProximaPagina] = useState(null);
@@ -12,14 +13,6 @@ export default function SelectBackendPaginado({ buscarPagina, paraOpcao, noOptio
   const temporizadorBusca = useRef(null);
 
   useEffect(() => () => clearTimeout(temporizadorBusca.current), []);
-
-  useEffect(() => {
-    if (!opcaoAtualizada) return;
-
-    setOpcoes((atuais) => atuais.map((opcao) => (
-      String(opcao.value) === String(opcaoAtualizada.value) ? opcaoAtualizada : opcao
-    )));
-  }, [opcaoAtualizada]);
 
   async function carregar(buscaAtual, offset, substituir) {
     const requisicao = requisicaoAtual.current + 1;
@@ -60,16 +53,25 @@ export default function SelectBackendPaginado({ buscarPagina, paraOpcao, noOptio
     carregar(busca, opcoes.length, false);
   }
 
+  const SelectComponent = onCreateOption ? CreatableSelect : Select;
+  const opcoesAtualizadas = opcaoAtualizada
+    ? opcoes.map((opcao) => (
+      String(opcao.value) === String(opcaoAtualizada.value) ? opcaoAtualizada : opcao
+    ))
+    : opcoes;
+
   return (
-    <Select
+    <SelectComponent
       {...props}
       classNamePrefix="async-select"
+      formatCreateLabel={formatCreateLabel}
       isLoading={carregando}
       noOptionsMessage={() => noOptionsMessage}
+      onCreateOption={onCreateOption}
       onInputChange={pesquisar}
       onMenuOpen={abrirMenu}
       onMenuScrollToBottom={carregarProximaPagina}
-      options={opcoes}
+      options={opcoesAtualizadas}
     />
   );
 }
