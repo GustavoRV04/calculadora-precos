@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CircleAlert, Package, Search, X } from "lucide-react";
 import { LIMITE_PAGINACAO, listarItensDoProduto } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
@@ -70,7 +71,7 @@ export default function ProdutoItensModal({ produto, onClose }) {
     setBusca(valor);
   }
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay"
       onClick={(event) => {
@@ -143,6 +144,7 @@ export default function ProdutoItensModal({ produto, onClose }) {
           onProxima={() => mudarPagina(1)}
         />
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
