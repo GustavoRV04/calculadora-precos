@@ -5,6 +5,7 @@ import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import Paginacao from "../components/Paginacao";
+import ProdutoItensModal from "../components/ProdutoItensModal";
 import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 const unidades = [
@@ -15,7 +16,7 @@ const unidades = [
   { valor: "UN", nome: "Unidades (un)" },
 ];
 
-export default function Compras({ busca, itens, paginacao, carregando, onBuscar, onSaved, onMudarPagina }) {
+export default function Compras({ busca, produtos, paginacao, carregando, onBuscar, onSaved, onMudarPagina }) {
   const [origemProduto, setOrigemProduto] = useState("existente");
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [nomeProduto, setNomeProduto] = useState("");
@@ -24,6 +25,7 @@ export default function Compras({ busca, itens, paginacao, carregando, onBuscar,
   const [unidade, setUnidade] = useState("KG");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [produtoHistorico, setProdutoHistorico] = useState(null);
 
   const custoUnitario = preco && quantidade
     ? calcularCustoIngrediente(Number(preco), Number(quantidade), 1, unidade)
@@ -135,25 +137,44 @@ export default function Compras({ busca, itens, paginacao, carregando, onBuscar,
       </section>
 
       <section className="list-section">
-        <div className="list-toolbar"><div><h2>Últimas compras</h2><p>{paginacao.itens.count} registros neste comércio</p></div><label className="search-box"><Search size={18} aria-hidden="true" /><input value={busca} onChange={(event) => onBuscar(event.target.value)} placeholder="Buscar compra" aria-label="Buscar compra por insumo" /></label><span className="count-badge">{paginacao.itens.count}</span></div>
-        <Paginacao paginacao={paginacao.itens} rotulo="compras" onAnterior={() => onMudarPagina("itens", -1)} onProxima={() => onMudarPagina("itens", 1)} />
-        {itens.length ? (
+        <div className="list-toolbar"><div><h2>Últimas compras</h2><p>{paginacao.produtos.count} registros neste comércio</p></div><label className="search-box"><Search size={18} aria-hidden="true" /><input value={busca} onChange={(event) => onBuscar(event.target.value)} placeholder="Buscar compra" aria-label="Buscar compra por insumo" /></label><span className="count-badge">{paginacao.produtos.count}</span></div>
+        <Paginacao paginacao={paginacao.produtos} rotulo="compras" onAnterior={() => onMudarPagina("produtos", -1)} onProxima={() => onMudarPagina("produtos", 1)} />
+        {produtos.length ? (
           <div className="purchase-list">
-            {itens.map((item) => {
-              const unitCost = calcularCustoIngrediente(item.preco_custo, item.quantidade_compra, 1, item.unidade_medida);
-              const base = unidadeBase(item.unidade_medida);
+            {produtos.map((produto) => {
+              const item = produto.ultimo_item;
+              const unitCost = item
+                ? calcularCustoIngrediente(item.preco_custo, item.quantidade_compra, 1, item.unidade_medida)
+                : null;
+              const base = item ? unidadeBase(item.unidade_medida) : null;
               return (
-                <article className="purchase-row" key={item.id}>
+                <article
+                  className="purchase-row product-history-trigger"
+                  key={produto.id}
+                  onClick={() => setProdutoHistorico(produto)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setProdutoHistorico(produto);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ver histórico de compras de ${produto.nome}`}
+                >
                   <span className="dish-icon"><ReceiptText size={20} /></span>
-                  <div className="purchase-main"><h3>{item.produto?.nome}</h3><p>Comprado: {formatarQuantidade(item.quantidade_compra)} {item.unidade_medida}</p><p>Pago: {formatarMoeda(item.preco_custo)}</p><p>{item.criado_em ? `Registrado em ${new Date(item.criado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : "Data não registrada"}</p></div>
-                  <div className="dish-cost"><span>Custo unitário</span><strong>{formatarCustoUnitario(unitCost)} / {base.toLowerCase()}</strong></div>
+                  <div className="purchase-main"><h3>{produto.nome}</h3><p>{item ? `Comprado: ${formatarQuantidade(item.quantidade_compra)} ${item.unidade_medida}` : "Nenhuma compra registrada"}</p>{item && <><p>Pago: {formatarMoeda(item.preco_custo)}</p><p>{item.criado_em ? `Registrado em ${new Date(item.criado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : "Data não registrada"}</p></>}</div>
+                  <div className="dish-cost"><span>Custo unitário</span><strong>{item ? `${formatarCustoUnitario(unitCost)} / ${base.toLowerCase()}` : "—"}</strong></div>
                 </article>
               );
             })}
           </div>
         ) : <div className="empty-state"><span className="empty-icon"><ShoppingCartIcon /></span><h3>Nenhuma compra registrada</h3><p>Cadastre uma compra para calcular o custo dos pratos.</p></div>}
-        <Paginacao paginacao={paginacao.itens} rotulo="compras" onAnterior={() => onMudarPagina("itens", -1)} onProxima={() => onMudarPagina("itens", 1)} />
+        <Paginacao paginacao={paginacao.produtos} rotulo="compras" onAnterior={() => onMudarPagina("produtos", -1)} onProxima={() => onMudarPagina("produtos", 1)} />
       </section>
+      {produtoHistorico && (
+        <ProdutoItensModal produto={produtoHistorico} onClose={() => setProdutoHistorico(null)} />
+      )}
     </div>
   );
 }

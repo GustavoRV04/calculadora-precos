@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { listarPratos, adicionarIngrediente } from "../services/pratoService";
-import { listarItens } from "../services/produtoService";
+import { listarProdutos } from "../services/produtoService";
 import { unidadeBase } from "../utils/conversorMedidas";
 
 export default function PratoItemForm({ dataVersion, onSaved }) {
   const [pratos, setPratos] = useState([]);
-  const [itens, setItens] = useState([]);
+  const [produtos, setProdutos] = useState([]);
 
   const [pratoId, setPratoId] = useState("");
-  const [itemId, setItemId] = useState("");
+  const [produtoId, setProdutoId] = useState("");
   const [quantidadeUtilizada, setQuantidadeUtilizada] = useState("");
 
   useEffect(() => {
@@ -16,31 +16,30 @@ export default function PratoItemForm({ dataVersion, onSaved }) {
       const { results: pratosData } = await listarPratos();
       setPratos(pratosData);
 
-      const { results: itensData } = await listarItens();
-      setItens(itensData);
-
-      console.log("todos os itens: ", itensData);
+      const { results: produtosData } = await listarProdutos();
+      setProdutos(produtosData);
 
       if (pratosData.length > 0) {
         setPratoId(pratosData[0].id);
       }
 
-      if (itensData.length > 0) {
-        setItemId(itensData[0].id);
+      const produtoComCompra = produtosData.find((produto) => produto.ultimo_item);
+      if (produtoComCompra) {
+        setProdutoId(produtoComCompra.id);
       }
     }
 
     carregarDados();
   }, [dataVersion]);
 
-  const itemSelecionado = itens.find((item) => String(item.id) === String(itemId));
+  const produtoSelecionado = produtos.find((produto) => String(produto.id) === String(produtoId));
 
   async function salvar() {
-    if (!pratoId || !itemId || !quantidadeUtilizada) return;
+    if (!pratoId || !produtoId || !quantidadeUtilizada) return;
 
     await adicionarIngrediente(
       pratoId,
-      Number(itemId),
+      Number(produtoId),
       Number(quantidadeUtilizada),
     );
 
@@ -67,10 +66,10 @@ export default function PratoItemForm({ dataVersion, onSaved }) {
       <br />
       <br />
 
-      <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-        {itens.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item?.produto?.nome} ({item.quantidade_compra} {item.unidade_medida} por R$ {item.preco_custo})
+      <select value={produtoId} onChange={(e) => setProdutoId(e.target.value)}>
+        {produtos.map((produto) => (
+          <option key={produto.id} value={produto.id} disabled={!produto.ultimo_item}>
+            {produto.nome} ({produto.ultimo_item ? `${produto.ultimo_item.quantidade_compra} ${produto.ultimo_item.unidade_medida} por R$ ${produto.ultimo_item.preco_custo}` : "sem compra registrada"})
           </option>
         ))}
       </select>
@@ -79,7 +78,7 @@ export default function PratoItemForm({ dataVersion, onSaved }) {
       <br />
 
       <label htmlFor="quantidade-utilizada">
-        Quantidade utilizada ({unidadeBase(itemSelecionado?.unidade_medida) ?? "unidade"})
+        Quantidade utilizada ({unidadeBase(produtoSelecionado?.ultimo_item?.unidade_medida) ?? "unidade"})
       </label>
       <input
         id="quantidade-utilizada"

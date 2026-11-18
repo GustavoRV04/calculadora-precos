@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Item, Prato, PratoItem, Produto, Restaurante
+from .models import Item, Prato, PratoProduto, Produto, Restaurante
 
 
 class ComercioApiTests(APITestCase):
@@ -198,7 +198,7 @@ class ComercioApiTests(APITestCase):
 			unidade_medida='G',
 		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
-		PratoItem.objects.create(prato=prato, item=compra_anterior, quantidade='500')
+		PratoProduto.objects.create(prato=prato, item=compra_anterior, quantidade='500')
 
 		compra_resposta = self.client.post('/api/v1/itens', {
 			'produto_id': produto.id,
@@ -278,7 +278,7 @@ class ComercioApiTests(APITestCase):
 		})
 
 		self.assertEqual(resposta.status_code, status.HTTP_201_CREATED)
-		prato_item = PratoItem.objects.get(pk=resposta.data['id'])
+		prato_item = PratoProduto.objects.get(pk=resposta.data['id'])
 		self.assertEqual(prato_item.prato, prato)
 		self.assertEqual(prato_item.item, item)
 		self.assertEqual(resposta.data['item']['produto']['nome'], 'Farinha')
@@ -309,7 +309,7 @@ class ComercioApiTests(APITestCase):
 		})
 
 		self.assertEqual(resposta.status_code, status.HTTP_400_BAD_REQUEST)
-		self.assertFalse(PratoItem.objects.exists())
+		self.assertFalse(PratoProduto.objects.exists())
 
 	def test_prato_novo_comeca_com_margem_padrao_de_vinte_porcento(self):
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
@@ -361,7 +361,7 @@ class ComercioApiTests(APITestCase):
 			unidade_medida='G',
 		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
-		prato_item = PratoItem.objects.create(prato=prato, item=item, quantidade='250')
+		prato_item = PratoProduto.objects.create(prato=prato, item=item, quantidade='250')
 
 		self.assertEqual(str(item), 'Farinha')
 		self.assertEqual(str(prato_item), '250 G de Farinha em Bolo')

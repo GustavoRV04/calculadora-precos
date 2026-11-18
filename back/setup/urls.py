@@ -22,7 +22,7 @@ from calculadora.views import (
     ItemViewSet,
     LoginRestauranteView,
     MargemLucroGeralView,
-    PratoItemViewSet,
+    PratoProdutoViewSet,
     PratoViewSet,
     ProdutoViewSet,
 )
@@ -38,7 +38,7 @@ router = DefaultRouter(trailing_slash=False)
 router.register('produtos', ProdutoViewSet)
 router.register('itens', ItemViewSet)
 router.register('pratos', PratoViewSet)
-router.register('prato-itens', PratoItemViewSet)
+router.register('prato-produtos', PratoProdutoViewSet)
 
 urlpatterns = [
     path('adminsecreto-0jf093jf/', admin.site.urls),

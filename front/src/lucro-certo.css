@@ -122,6 +122,12 @@ input, select { min-width: 0; }
 .compact-panel { gap: 13px; }
 .modal-overlay { position: fixed; z-index: 99999; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); background: rgba(11,28,48,.48); backdrop-filter: blur(5px); }
 .modal-content { display: flex; width: min(100%,480px); max-height: min(90dvh,640px); flex-direction: column; gap: 19px; overflow-y: auto; padding: 22px 18px calc(20px + env(safe-area-inset-bottom)); background: var(--white); border: 1px solid rgba(226,232,242,.85); border-radius: 20px; box-shadow: 0 24px 70px rgba(11,28,48,.24); animation: modal-enter 220ms ease-out both; }
+.product-history-modal { width: min(100%,720px); }
+.product-history-search { flex-shrink: 0; }
+.product-history-list { max-height: min(54dvh,420px); overflow-y: auto; }
+.product-history-trigger { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.product-history-trigger:hover { border-color: var(--primary); }
+.product-history-trigger:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .edit-modal-header { display: flex; align-items: center; gap: 12px; }
 .edit-modal-icon { color: var(--primary); }
 .edit-modal-heading { min-width: 0; flex: 1; }

@@ -20,6 +20,17 @@ export async function listarItens(offset = 0, search = "") {
   return requisicaoApi(caminhoPaginado("itens", offset, search));
 }
 
+export async function listarItensDoProduto(produtoId, offset = 0, search = "") {
+  const parametros = new URLSearchParams({
+    limit: String(LIMITE_PAGINACAO),
+    offset: String(offset),
+    produto_id: String(produtoId),
+  });
+
+  if (search.trim()) parametros.set("search", search.trim());
+  return requisicaoApi(`/itens?${parametros}`);
+}
+
 export async function listarItensAtuais(offset = 0, search = "") {
   return requisicaoApi(`${caminhoPaginado("itens", offset, search)}&atuais=true`);
 }

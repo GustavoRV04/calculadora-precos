@@ -19,7 +19,7 @@ import {
   pratoPorId,
   removerIngrediente,
 } from "../services/pratoService";
-import { listarItensAtuais } from "../services/produtoService";
+import { listarProdutos } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
@@ -27,16 +27,15 @@ import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 export default function MontarPrato({
   pratos,
-  itens,
   onSaved,
   onPratoAtualizado,
   onNavigate,
 }) {
   const [nomePrato, setNomePrato] = useState("");
   const [pratoId, setPratoId] = useState("");
-  const [itemId, setItemId] = useState("");
+  const [produtoId, setProdutoId] = useState("");
   const [pratoSelecionado, setPratoSelecionado] = useState(null);
-  const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [buscaIngredientes, setBuscaIngredientes] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [erro, setErro] = useState("");
@@ -53,9 +52,8 @@ export default function MontarPrato({
   const prato =
     pratoSelecionado?.registro ??
     pratos.find((registro) => String(registro.id) === String(pratoAtivoId));
-  const item =
-    itemSelecionado?.registro ??
-    itens.find((registro) => String(registro.id) === String(itemId));
+  const produto = produtoSelecionado?.registro;
+  const item = produto?.ultimo_item;
   const opcaoPratoSelecionado =
     pratoSelecionado ??
     (prato ? { value: prato.id, label: prato.nome, registro: prato } : null);
@@ -71,18 +69,18 @@ export default function MontarPrato({
       : 0;
   const quantidadeAtual = Number(ingredienteEditando?.quantidade ?? 0);
   const quantidadeNova = Number(quantidadeEditada);
-  const custoAtualizado = ingredienteEditando && quantidadeNova > 0
+  const custoAtualizado = ingredienteEditando?.produto?.ultimo_item && quantidadeNova > 0
     ? calcularCustoIngrediente(
-      ingredienteEditando.item.preco_custo,
-      ingredienteEditando.item.quantidade_compra,
+      ingredienteEditando.produto.ultimo_item.preco_custo,
+      ingredienteEditando.produto.ultimo_item.quantidade_compra,
       quantidadeNova,
-      ingredienteEditando.item.unidade_medida,
+      ingredienteEditando.produto.ultimo_item.unidade_medida,
     )
     : null;
 
   const unidadeReceita = unidadeBase(item?.unidade_medida);
-  const ingredientesFiltrados = (prato?.prato_itens ?? []).filter((pratoItem) =>
-    pratoItem.item.produto.nome
+  const ingredientesFiltrados = (prato?.prato_produtos ?? []).filter((pratoProduto) =>
+    pratoProduto.produto.nome
       .toLocaleLowerCase("pt-BR")
       .includes(buscaIngredientes.trim().toLocaleLowerCase("pt-BR")),
   );
@@ -113,18 +111,22 @@ export default function MontarPrato({
     return listarPratos(offset, busca);
   }
 
-  function buscarItens(busca, offset) {
-    return listarItensAtuais(offset, busca);
+  function buscarProdutos(busca, offset) {
+    return listarProdutos(offset, busca);
   }
 
   function opcaoPrato(registro) {
     return { value: registro.id, label: registro.nome, registro };
   }
 
-  function opcaoItem(registro) {
+  function opcaoProduto(registro) {
+    const itemAtual = registro.ultimo_item;
     return {
       value: registro.id,
-      label: `${registro.produto?.nome} · ${formatarMoeda(registro.preco_custo)} / ${formatarQuantidade(registro.quantidade_compra)} ${registro.unidade_medida}`,
+      label: itemAtual
+        ? `${registro.nome} · ${formatarMoeda(itemAtual.preco_custo)} / ${formatarQuantidade(itemAtual.quantidade_compra)} ${itemAtual.unidade_medida}`
+        : `${registro.nome} · Sem compra registrada`,
+      isDisabled: !itemAtual,
       registro,
     };
   }
@@ -136,14 +138,14 @@ export default function MontarPrato({
       setErro("Crie ou selecione um prato antes de adicionar ingredientes.");
       return;
     }
-    if (!itemId || Number(quantidade) <= 0) {
+    if (!produtoId || !item || Number(quantidade) <= 0) {
       setErro("Selecione um insumo e informe uma quantidade maior que zero.");
       return;
     }
 
     setSalvando(true);
     try {
-      await adicionarIngrediente(pratoAtivoId, itemId, Number(quantidade));
+      await adicionarIngrediente(pratoAtivoId, produtoId, Number(quantidade));
       const pratoAtualizado = await pratoPorId(pratoAtivoId);
       setPratoSelecionado(opcaoPrato(pratoAtualizado));
       onPratoAtualizado(pratoAtualizado);
@@ -155,10 +157,10 @@ export default function MontarPrato({
     }
   }
 
-  async function excluirItem(pratoItemId) {
+  async function excluirItem(pratoProdutoId) {
     setErro("");
     try {
-      await removerIngrediente(pratoItemId);
+      await removerIngrediente(pratoProdutoId);
       const pratoAtualizado = await pratoPorId(pratoAtivoId);
       setPratoSelecionado(opcaoPrato(pratoAtualizado));
       onPratoAtualizado(pratoAtualizado);
@@ -168,9 +170,9 @@ export default function MontarPrato({
   }
 
   // Funções de Controle do Modal de Edição
-  function abrirModalEdicao(pratoItem) {
-    setIngredienteEditando(pratoItem);
-    setQuantidadeEditada(String(pratoItem.quantidade));
+  function abrirModalEdicao(pratoProduto) {
+    setIngredienteEditando(pratoProduto);
+    setQuantidadeEditada(String(pratoProduto.quantidade));
     setErroEdicao("");
     setModalEdicaoAberto(true);
   }
@@ -212,7 +214,7 @@ export default function MontarPrato({
     try {
       await atualizarIngredientePratoService(ingredienteEditando.id, {
         prato_id: pratoAtivoId,
-        item_id: ingredienteEditando.item.id,
+        produto_id: ingredienteEditando.produto.id,
         quantidade: Number(quantidadeEditada),
       });
 
@@ -298,16 +300,16 @@ export default function MontarPrato({
           <label className="field-label field-span">
             Insumo comprado
             <SelectBackendPaginado
-              buscarPagina={buscarItens}
-              inputId="item"
+              buscarPagina={buscarProdutos}
+              inputId="produto"
               noOptionsMessage="Nenhum insumo encontrado"
               onChange={(opcao) => {
-                setItemSelecionado(opcao);
-                setItemId(String(opcao?.value ?? ""));
+                setProdutoSelecionado(opcao);
+                setProdutoId(String(opcao?.value ?? ""));
               }}
-              paraOpcao={opcaoItem}
+              paraOpcao={opcaoProduto}
               placeholder="Busque um insumo comprado"
-              value={itemSelecionado}
+              value={produtoSelecionado}
             />
           </label>
           <label className="field-label">
@@ -336,7 +338,7 @@ export default function MontarPrato({
           )}
           <button
             className="button-primary field-span submit-button"
-            disabled={salvando || !itemId}
+            disabled={salvando || !produtoId || !item}
             type="submit"
           >
             {salvando ? (
@@ -374,40 +376,44 @@ export default function MontarPrato({
               aria-label="Buscar ingrediente no prato"
             />
           </label>
-          <span className="count-badge">{prato?.prato_itens?.length ?? 0}</span>
+          <span className="count-badge">{prato?.prato_produtos?.length ?? 0}</span>
         </div>
         {ingredientesFiltrados.length ? (
           <>
             <div className="ingredient-list">
-              {ingredientesFiltrados.map((pratoItem) => {
-                const custo = calcularCustoIngrediente(
-                  pratoItem.item.preco_custo,
-                  pratoItem.item.quantidade_compra,
-                  pratoItem.quantidade,
-                  pratoItem.item.unidade_medida,
-                );
+              {ingredientesFiltrados.map((pratoProduto) => {
+                const itemAtual = pratoProduto.produto.ultimo_item;
+                const custo = itemAtual
+                  ? calcularCustoIngrediente(
+                    itemAtual.preco_custo,
+                    itemAtual.quantidade_compra,
+                    pratoProduto.quantidade,
+                    itemAtual.unidade_medida,
+                  )
+                  : null;
                 return (
-                  <article className="ingredient-row" key={pratoItem.id}>
+                  <article className="ingredient-row" key={pratoProduto.id}>
                     <span className="dish-icon">
                       <CookingPot size={19} />
                     </span>
                     <div className="ingredient-main">
-                      <h3>{pratoItem.item.produto.nome}</h3>
+                      <h3>{pratoProduto.produto.nome}</h3>
                       <p>
-                        {formatarQuantidade(pratoItem.quantidade)}{" "}
-                        {unidadeBase(pratoItem.item.unidade_medida)}
+                        {formatarQuantidade(pratoProduto.quantidade)}{" "}
+                        {itemAtual ? unidadeBase(itemAtual.unidade_medida) : "unidade"}
                       </p>
                     </div>
                     <strong className="ingredient-cost">
-                      {formatarMoeda(custo)}
+                      {custo === null ? "—" : formatarMoeda(custo)}
                     </strong>
 
                     {/* Botão de Editar */}
                     <button
                       className="icon-button"
                       type="button"
-                      onClick={() => abrirModalEdicao(pratoItem)}
-                      aria-label={`Editar ${pratoItem.item.produto.nome}`}
+                      disabled={!itemAtual}
+                      onClick={() => abrirModalEdicao(pratoProduto)}
+                      aria-label={`Editar ${pratoProduto.produto.nome}`}
                       title="Editar ingrediente"
                     >
                       <Pencil size={17} />
@@ -416,8 +422,8 @@ export default function MontarPrato({
                     <button
                       className="icon-button danger-button"
                       type="button"
-                      onClick={() => excluirItem(pratoItem.id)}
-                      aria-label={`Remover ${pratoItem.item.produto.nome}`}
+                      onClick={() => excluirItem(pratoProduto.id)}
+                      aria-label={`Remover ${pratoProduto.produto.nome}`}
                       title="Remover ingrediente"
                     >
                       <Trash2 size={17} />
@@ -490,8 +496,8 @@ export default function MontarPrato({
             <div className="edit-ingredient-context">
               <span className="dish-icon"><CookingPot size={19} /></span>
               <div>
-                <strong>{ingredienteEditando?.item?.produto?.nome}</strong>
-                <span>Quantidade por receita em {unidadeBase(ingredienteEditando?.item?.unidade_medida) || "unidade"}</span>
+                <strong>{ingredienteEditando?.produto?.nome}</strong>
+                <span>Quantidade por receita em {unidadeBase(ingredienteEditando?.produto?.ultimo_item?.unidade_medida) || "unidade"}</span>
               </div>
             </div>
 
@@ -516,10 +522,10 @@ export default function MontarPrato({
                 <div>
                   <span>Antes</span>
                   <strong>{formatarMoeda(calcularCustoIngrediente(
-                    ingredienteEditando.item.preco_custo,
-                    ingredienteEditando.item.quantidade_compra,
+                    ingredienteEditando.produto.ultimo_item.preco_custo,
+                    ingredienteEditando.produto.ultimo_item.quantidade_compra,
                     quantidadeAtual,
-                    ingredienteEditando.item.unidade_medida,
+                    ingredienteEditando.produto.ultimo_item.unidade_medida,
                   ))}</strong>
                 </div>
                 <ArrowRight size={17} aria-hidden="true" />

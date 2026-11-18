@@ -4,9 +4,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
-from .models import Item, Prato, PratoItem, Produto, Restaurante
-
-
+from .models import Item, Prato, PratoProduto, Produto, Restaurante
 class RestauranteCadastroSerializer(serializers.Serializer):
     nome = serializers.CharField(max_length=100)
     email = serializers.EmailField()
@@ -48,24 +46,12 @@ class MargemLucroGeralSerializer(serializers.ModelSerializer):
         model = Restaurante
         fields = ["margem_lucro_percentual"]
 
-class ProdutoSerializer(serializers.ModelSerializer):
-    def validate_nome(self, value):
-        nome = value.strip()
-        if not nome:
-            raise serializers.ValidationError("Informe o nome do insumo.")
-        return nome
-
-    class Meta:
-        model = Produto
-        fields = ["id", "nome", "restaurante_id"]
-        read_only_fields = ["restaurante_id"]
 
 class ItemSerializer(serializers.ModelSerializer):
-    produto = ProdutoSerializer(read_only=True)
+    # produto = ProdutoSerializer(read_only=True)
     produto_id = serializers.PrimaryKeyRelatedField(
         source='produto',
         queryset=Produto.objects.all(),
-        write_only=True
     )
     preco_custo = serializers.DecimalField(
         max_digits=10,
@@ -83,7 +69,7 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = [
             "id",
-            "produto",
+            # "produto",
             "produto_id",
             "preco_custo",
             "unidade_medida",
@@ -101,11 +87,33 @@ class ItemSerializer(serializers.ModelSerializer):
             )
         return fields
 
-class PratoItemSerializer(serializers.ModelSerializer):
-    item = serializers.SerializerMethodField()
-    item_id = serializers.PrimaryKeyRelatedField(
-        source='item',
-        queryset=Item.objects.all(),
+
+class ProdutoSerializer(serializers.ModelSerializer):
+    ultimo_item = serializers.SerializerMethodField()
+
+    def get_ultimo_item(self, obj):
+        itens = obj.ultimo_item_lista
+        if itens:
+            return ItemSerializer(itens[0], context=self.context).data
+        return None
+
+    def validate_nome(self, value):
+        nome = value.strip()
+        if not nome:
+            raise serializers.ValidationError("Informe o nome do insumo.")
+        return nome
+
+    class Meta:
+        model = Produto
+        fields = ["id", "nome", "restaurante_id", "ultimo_item"]
+        read_only_fields = ["restaurante_id"]
+
+class PratoProdutoSerializer(serializers.ModelSerializer):
+    # produto = serializers.SerializerMethodField()
+    produto = ProdutoSerializer(read_only=True)
+    produto_id = serializers.PrimaryKeyRelatedField(
+        source='produto',
+        queryset=Produto.objects.all(),
         write_only=True
     )
     prato = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -121,22 +129,22 @@ class PratoItemSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = PratoItem
-        fields = ["id", "prato", "prato_id", "item", "item_id", "quantidade"]
+        model = PratoProduto
+        fields = ["id", "prato", "prato_id", "produto", "produto_id", "quantidade"]
 
-    def get_item(self, obj):
-        produto_id = obj.item.produto_id
-        itens_atuais = self.context.setdefault("_itens_atuais_por_produto", {})
-        if produto_id not in itens_atuais:
-            itens_atuais[produto_id] = (
-                Item.objects.filter(produto_id=produto_id)
-                .order_by(F("criado_em").desc(nulls_last=True), "-id")
-                .first()
-            )
-        return ItemSerializer(
-            itens_atuais[produto_id],
-            context=self.context,
-        ).data
+    # def get_produto(self, obj):
+    #     produto_id = obj.item.produto_id
+    #     itens_atuais = self.context.setdefault("_itens_atuais_por_produto", {})
+    #     if produto_id not in itens_atuais:
+    #         itens_atuais[produto_id] = (
+    #             Item.objects.filter(produto_id=produto_id)
+    #             .order_by(F("criado_em").desc(nulls_last=True), "-id")
+    #             .first()
+    #         )
+    #     return ItemSerializer(
+    #         itens_atuais[produto_id],
+    #         context=self.context,
+    #     ).data
 
     def get_fields(self):
         fields = super().get_fields()
@@ -145,10 +153,11 @@ class PratoItemSerializer(serializers.ModelSerializer):
             fields["prato_id"].queryset = Prato.objects.filter(
                 restaurante__usuario=request.user
             )
-            fields["item_id"].queryset = Item.objects.filter(
-                produto__restaurante__usuario=request.user
+            fields["produto_id"].queryset = Produto.objects.filter(
+                restaurante__usuario=request.user
             )
         return fields
+
 
 class PratoSerializer(serializers.ModelSerializer):
     margem_lucro_percentual = serializers.DecimalField(
@@ -158,12 +167,12 @@ class PratoSerializer(serializers.ModelSerializer):
         max_value=Decimal("99.99"),
         required=False,
     )
-    prato_itens = PratoItemSerializer(
-        source='pratoitem_set',
+    prato_produtos = PratoProdutoSerializer(
+        source='pratoproduto_set',
         many=True,
         read_only=True
     )
     class Meta:
         model = Prato
-        fields = ["id", "nome", "restaurante_id", "margem_lucro_percentual", "prato_itens"]
-        read_only_fields = ["restaurante_id", "prato_itens"]
+        fields = ["id", "nome", "restaurante_id", "margem_lucro_percentual", "prato_produtos"]
+        read_only_fields = ["restaurante_id", "prato_produtos"]

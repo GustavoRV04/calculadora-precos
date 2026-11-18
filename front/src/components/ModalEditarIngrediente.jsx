@@ -19,7 +19,7 @@ export default function ModalEditarIngrediente({
         <div className="panel-title">
           <div>
             <h2>Editar ingrediente</h2>
-            <p>{ingredienteEditando?.item?.produto?.nome}</p>
+            <p>{ingredienteEditando?.produto?.nome}</p>
           </div>
           <button
             className="icon-button"
@@ -33,7 +33,7 @@ export default function ModalEditarIngrediente({
         <form className="form-grid" onSubmit={onSave}>
           <label className="field-label field-span">
             Nova quantidade (
-            {unidadeBase(ingredienteEditando?.item?.unidade_medida) ||
+            {unidadeBase(ingredienteEditando?.produto?.ultimo_item?.unidade_medida) ||
               "unidade"}
             )
             <input

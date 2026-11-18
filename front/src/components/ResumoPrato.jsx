@@ -58,11 +58,11 @@ export default function ResumoPrato({ dataVersion }) {
       </select>
 
       <ul>
-        {prato?.prato_itens?.map((pratoItem) => (
-          <li key={pratoItem.id}>
-            {pratoItem.item.produto.nome}
+        {prato?.prato_produtos?.map((pratoProduto) => (
+          <li key={pratoProduto.id}>
+            {pratoProduto.produto.nome}
             {" - "}
-            {pratoItem.quantidade} {unidadeBase(pratoItem.item.unidade_medida)}
+            {pratoProduto.quantidade} {unidadeBase(pratoProduto.produto.ultimo_item?.unidade_medida) ?? "unidade"}
           </li>
         ))}
       </ul>

@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.db import IntegrityError, transaction
-from django.db.models import F, OuterRef, Subquery
+from django.db.models import F, OuterRef, Prefetch, Subquery
 from django.db.models.functions import Lower, Trim
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
@@ -11,17 +11,31 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Item, Prato, PratoItem, Produto, Restaurante
+from .models import Item, Prato, PratoProduto, Produto, Restaurante
 from .serializers import (
     ItemSerializer,
     MargemLucroGeralSerializer,
-    PratoItemSerializer,
+    PratoProdutoSerializer,
     PratoSerializer,
     ProdutoSerializer,
     RestauranteCadastroSerializer,
     RestauranteSerializer,
 )
 
+def ultimo_item_queryset():
+    return Item.objects.order_by(
+        F("criado_em").desc(nulls_last=True),
+        "-id",
+    )[:1]
+
+def produto_com_ultimo_item():
+    return Produto.objects.prefetch_related(
+        Prefetch(
+            "itens",
+            queryset=ultimo_item_queryset(),
+            to_attr="ultimo_item_lista",
+        )
+    )
 
 class CadastroRestauranteView(APIView):
     authentication_classes = []
@@ -118,15 +132,38 @@ class RestauranteScopedViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Esta conta não possui um comércio associado.")
         return restaurante
 
+class ItemViewSet(RestauranteScopedViewSet):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+
+    search_fields = ["quantidade_compra", "preco_custo", "unidade_medida"]
+    filterset_fields = ["produto_id"]
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(
+            produto__restaurante=self.get_restaurante(),
+        )
+        if self.request.query_params.get("atuais") == "true":
+            item_mais_recente = Item.objects.filter(
+                produto_id=OuterRef("produto_id"),
+            ).order_by(
+                F("criado_em").desc(nulls_last=True),
+                "-id",
+            ).values("id")[:1]
+            queryset = queryset.filter(pk=Subquery(item_mais_recente))
+        return queryset.order_by(
+            F("criado_em").desc(nulls_last=True),
+            "-id",
+        )
 
 class ProdutoViewSet(RestauranteScopedViewSet):
-    queryset = Produto.objects.all()
+    queryset = produto_com_ultimo_item()
     serializer_class = ProdutoSerializer
 
     search_fields = ["nome"]
 
     def get_queryset(self):
-        return Produto.objects.filter(restaurante=self.get_restaurante())
+        return self.queryset.filter(restaurante=self.get_restaurante())
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -175,32 +212,8 @@ class ProdutoViewSet(RestauranteScopedViewSet):
         serializer.save(restaurante=self.get_restaurante())
 
 
-class ItemViewSet(RestauranteScopedViewSet):
-    queryset = Item.objects.all()
-    serializer_class = ItemSerializer
-
-    search_fields = ["produto__nome"]
-
-    def get_queryset(self):
-        queryset = Item.objects.filter(
-            produto__restaurante=self.get_restaurante(),
-        )
-        if self.request.query_params.get("atuais") == "true":
-            item_mais_recente = Item.objects.filter(
-                produto_id=OuterRef("produto_id"),
-            ).order_by(
-                F("criado_em").desc(nulls_last=True),
-                "-id",
-            ).values("id")[:1]
-            queryset = queryset.filter(pk=Subquery(item_mais_recente))
-        return queryset.order_by(
-            F("criado_em").desc(nulls_last=True),
-            "-id",
-        )
-
-
 class PratoViewSet(RestauranteScopedViewSet):
-    queryset = Prato.objects.all().prefetch_related("pratoitem_set__item__produto")
+    queryset = Prato.objects.all()
     serializer_class = PratoSerializer
 
     # pesquisa exata
@@ -210,7 +223,10 @@ class PratoViewSet(RestauranteScopedViewSet):
 
     def get_queryset(self):
         return Prato.objects.filter(restaurante=self.get_restaurante()).prefetch_related(
-            "pratoitem_set__item__produto"
+            Prefetch(
+                "pratoproduto_set__produto",
+                queryset=produto_com_ultimo_item(),
+            )
         )
 
     def perform_create(self, serializer):
@@ -221,9 +237,35 @@ class PratoViewSet(RestauranteScopedViewSet):
         )
 
 
-class PratoItemViewSet(RestauranteScopedViewSet):
-    queryset = PratoItem.objects.all()
-    serializer_class = PratoItemSerializer
+class PratoProdutoViewSet(RestauranteScopedViewSet):
+    queryset = PratoProduto.objects.all()
+    serializer_class = PratoProdutoSerializer
 
     def get_queryset(self):
-        return PratoItem.objects.filter(prato__restaurante=self.get_restaurante())
+        return PratoProduto.objects.filter(prato__restaurante=self.get_restaurante()) \
+            .select_related("produto") \
+            .prefetch_related(
+                Prefetch( 
+                    "produto__itens",
+                    queryset=ultimo_item_queryset(),
+                    to_attr="ultimo_item_lista",
+                )
+            )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = serializer.save()
+
+        instance = self.get_queryset().get(pk=instance.pk)
+
+        response_serializer = self.get_serializer(instance)
+
+        headers = self.get_success_headers(response_serializer.data)
+
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers,
+        )

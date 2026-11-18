@@ -72,7 +72,7 @@ export default function Dashboard({ pratos, paginacao, busca, carregando, onNavi
                 <span className="dish-icon"><BookOpen size={21} /></span>
                 <div className="dish-main">
                   <h3>{prato.nome}</h3>
-                  <p>{prato.prato_itens?.length ?? 0} {(prato.prato_itens?.length ?? 0) === 1 ? "ingrediente" : "ingredientes"}</p>
+                  <p>{prato.prato_produtos?.length ?? 0} {(prato.prato_produtos?.length ?? 0) === 1 ? "ingrediente" : "ingredientes"}</p>
                 </div>
                 <div className="dish-pricing">
                   <div className="dish-metric dish-metric-cost"><span>Custo de produção</span><strong>{formatarMoeda(prato.custo)}</strong></div>

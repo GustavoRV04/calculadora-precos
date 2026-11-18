@@ -8,24 +8,16 @@ import FichaTecnica from "./pages/FichaTecnica";
 import MontarPrato from "./pages/MontarPrato";
 import {
   LIMITE_PAGINACAO,
-  listarItens,
   listarProdutos,
 } from "./services/produtoService";
 import { listarPratos } from "./services/pratoService";
 import { limparSessao, obterSessao } from "./services/api";
 
-const dadosVazios = { produtos: [], itens: [], pratos: [] };
-const offsetsIniciais = { produtos: 0, itens: 0, pratos: 0 };
+const dadosVazios = { produtos: [], pratos: [] };
+const offsetsIniciais = { produtos: 0, pratos: 0 };
 const ATRASO_BUSCA_MS = 300;
 const paginacaoVazia = {
   produtos: {
-    count: 0,
-    next: null,
-    previous: null,
-    offset: 0,
-    limit: LIMITE_PAGINACAO,
-  },
-  itens: {
     count: 0,
     next: null,
     previous: null,
@@ -51,15 +43,14 @@ export default function App() {
   const [paginacao, setPaginacao] = useState(paginacaoVazia);
   const [carregamentos, setCarregamentos] = useState({
     produtos: false,
-    itens: false,
     pratos: false,
   });
   const [erroApi, setErroApi] = useState("");
   const [pratoSelecionado, setPratoSelecionado] = useState("");
   const [buscaPratos, setBuscaPratos] = useState("");
   const [buscaPratosAplicada, setBuscaPratosAplicada] = useState("");
-  const [buscaItens, setBuscaItens] = useState("");
-  const [buscaItensAplicada, setBuscaItensAplicada] = useState("");
+  const [buscaProdutos, setBuscaProdutos] = useState("");
+  const [buscaProdutosAplicada, setBuscaProdutosAplicada] = useState("");
 
   useEffect(() => {
     document.documentElement.dataset.theme = temaEscuro ? "dark" : "light";
@@ -77,12 +68,12 @@ export default function App() {
 
   useEffect(() => {
     const temporizador = setTimeout(() => {
-      setBuscaItensAplicada(buscaItens);
-      setOffsets((atuais) => ({ ...atuais, itens: 0 }));
+      setBuscaProdutosAplicada(buscaProdutos);
+      setOffsets((atuais) => ({ ...atuais, produtos: 0 }));
     }, ATRASO_BUSCA_MS);
 
     return () => clearTimeout(temporizador);
-  }, [buscaItens]);
+  }, [buscaProdutos]);
 
   useEffect(() => {
     if (!sessao) {
@@ -91,7 +82,7 @@ export default function App() {
 
     let vigente = true;
     setCarregamentos((atuais) => ({ ...atuais, produtos: true }));
-    listarProdutos(offsets.produtos)
+    listarProdutos(offsets.produtos, buscaProdutosAplicada)
       .then((produtos) => {
         if (!vigente) return;
         setDados((atuais) => ({ ...atuais, produtos: produtos.results }));
@@ -123,44 +114,7 @@ export default function App() {
     return () => {
       vigente = false;
     };
-  }, [sessao, versaoDados, offsets.produtos]);
-
-  useEffect(() => {
-    if (!sessao) {
-      return undefined;
-    }
-
-    let vigente = true;
-    setCarregamentos((atuais) => ({ ...atuais, itens: true }));
-    listarItens(offsets.itens, buscaItensAplicada)
-      .then((itens) => {
-        if (!vigente) return;
-        setDados((atuais) => ({ ...atuais, itens: itens.results }));
-        setPaginacao((atuais) => ({
-          ...atuais,
-          itens: { ...itens, offset: offsets.itens, limit: LIMITE_PAGINACAO },
-        }));
-        setErroApi("");
-      })
-      .catch((error) => {
-        if (!vigente) return;
-        if (error.status === 401) {
-          limparSessao();
-          setSessao(null);
-          setDados(dadosVazios);
-          return;
-        }
-        setErroApi(error.message);
-      })
-      .finally(() => {
-        if (vigente)
-          setCarregamentos((atuais) => ({ ...atuais, itens: false }));
-      });
-
-    return () => {
-      vigente = false;
-    };
-  }, [sessao, versaoDados, offsets.itens, buscaItensAplicada]);
+  }, [sessao, versaoDados, offsets.produtos, buscaProdutosAplicada]);
 
   useEffect(() => {
     if (!sessao) {
@@ -229,8 +183,8 @@ export default function App() {
     setBuscaPratos(busca);
   }
 
-  function buscarItens(busca) {
-    setBuscaItens(busca);
+  function buscarProdutos(busca) {
+    setBuscaProdutos(busca);
   }
 
   function sair() {
@@ -239,7 +193,7 @@ export default function App() {
     setDados(dadosVazios);
     setPaginacao(paginacaoVazia);
     setOffsets(offsetsIniciais);
-    setCarregamentos({ produtos: false, itens: false, pratos: false });
+    setCarregamentos({ produtos: false, pratos: false });
     setSecao("dashboard");
   }
 
@@ -270,11 +224,11 @@ export default function App() {
         )}
         {secao === "compras" && (
           <Compras
-            busca={buscaItens}
-            itens={dados.itens}
+            busca={buscaProdutos}
+            produtos={dados.produtos}
             paginacao={paginacao}
-            carregando={carregamentos.produtos || carregamentos.itens}
-            onBuscar={buscarItens}
+            carregando={carregamentos.produtos}
+            onBuscar={buscarProdutos}
             onSaved={atualizarDados}
             onMudarPagina={mudarPagina}
           />
@@ -282,7 +236,6 @@ export default function App() {
         {secao === "montar" && (
           <MontarPrato
             pratos={dados.pratos}
-            itens={dados.itens}
             onSaved={atualizarDados}
             onPratoAtualizado={atualizarPrato}
             onNavigate={setSecao}

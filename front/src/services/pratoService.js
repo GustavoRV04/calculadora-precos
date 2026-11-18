@@ -4,8 +4,8 @@ import { LIMITE_PAGINACAO } from "./produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
 
 export function calcularPrato(prato) {
-  const total = (prato?.prato_itens ?? []).reduce((soma, pratoItem) => {
-    const item = pratoItem.item;
+  const total = (prato?.prato_produtos ?? []).reduce((soma, pratoProduto) => {
+    const item = pratoProduto.produto?.ultimo_item;
     if (!item) return soma;
 
     return (
@@ -13,7 +13,7 @@ export function calcularPrato(prato) {
       calcularCustoIngrediente(
         item.preco_custo,
         item.quantidade_compra,
-        pratoItem.quantidade,
+        pratoProduto.quantidade,
         item.unidade_medida,
       )
     );
@@ -51,12 +51,12 @@ export async function criarPrato(nome) {
   });
 }
 
-export async function adicionarIngrediente(pratoId, itemId, quantidade) {
-  return requisicaoApi("/prato-itens", {
+export async function adicionarIngrediente(pratoId, produtoId, quantidade) {
+  return requisicaoApi("/prato-produtos", {
     method: "POST",
     body: {
       prato_id: pratoId,
-      item_id: itemId,
+      produto_id: produtoId,
       quantidade,
     },
   });
@@ -72,15 +72,15 @@ export async function listarPratos(offset = 0, search = "") {
   return requisicaoApi(`/pratos?${parametros}`);
 }
 
-export async function removerIngrediente(pratoItemId) {
-  return requisicaoApi(`/prato-itens/${pratoItemId}`, { method: "DELETE" });
+export async function removerIngrediente(pratoProdutoId) {
+  return requisicaoApi(`/prato-produtos/${pratoProdutoId}`, { method: "DELETE" });
 }
 
 export async function atualizarIngredientePratoService(
-  pratoItemId,
+  pratoProdutoId,
   dadosAtualizados,
 ) {
-  return requisicaoApi(`/prato-itens/${pratoItemId}`, {
+  return requisicaoApi(`/prato-produtos/${pratoProdutoId}`, {
     body: dadosAtualizados,
     method: "PUT",
   });

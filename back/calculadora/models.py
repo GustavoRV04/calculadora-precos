@@ -5,6 +5,7 @@ from django.db.models.functions import Lower, Trim
 from django.utils import timezone
 
 # Create your models here.
+
 class Restaurante(models.Model):
     nome = models.CharField(max_length=100)
     margem_lucro_percentual = models.DecimalField(
@@ -68,15 +69,16 @@ class Prato(models.Model):
         related_name="pratos",
     )
     # margem_lucro_percentual = models.DecimalField(max_digits=5, decimal_places=2) # Ex: 30.00 para 30%
-    itens = models.ManyToManyField(Item, through='PratoItem')
+    produtos = models.ManyToManyField(Produto, through='PratoProduto')
+
     
     def __str__(self):
         return self.nome
 
-class PratoItem(models.Model):
+class PratoProduto(models.Model):
     prato = models.ForeignKey(Prato, on_delete=models.PROTECT)
-    item = models.ForeignKey(Item, on_delete=models.PROTECT)
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
     quantidade = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantidade usada na receita")
 
     def __str__(self):
-        return f"{self.quantidade} {self.item.unidade_medida} de {self.item.produto.nome} em {self.prato.nome}"
+        return f"{self.quantidade} {self.produto.ultimo_item.unidade_medida} de {self.item.produto.nome} em {self.prato.nome}"

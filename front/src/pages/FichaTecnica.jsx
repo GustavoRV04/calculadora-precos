@@ -32,9 +32,11 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
   const margemValida = margem.trim() !== "" && Number.isFinite(margemNumerica) && margemNumerica >= 0 && margemNumerica < 100;
   const precoVenda = margemValida ? calcularPrecoVendaComMargem(total, margemNumerica) : null;
   const lucroPorVenda = precoVenda === null ? null : Number((precoVenda - total).toFixed(2));
-  const linhas = (prato?.prato_itens ?? []).map((pratoItem, index) => {
-    const custo = calcularCustoIngrediente(pratoItem.item.preco_custo, pratoItem.item.quantidade_compra, pratoItem.quantidade, pratoItem.item.unidade_medida);
-    return { ...pratoItem, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] };
+  const linhas = (prato?.prato_produtos ?? []).flatMap((pratoProduto, index) => {
+    const itemAtual = pratoProduto.produto?.ultimo_item;
+    if (!itemAtual) return [];
+    const custo = calcularCustoIngrediente(itemAtual.preco_custo, itemAtual.quantidade_compra, pratoProduto.quantidade, itemAtual.unidade_medida);
+    return [{ ...pratoProduto, itemAtual, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] }];
   });
 
   useEffect(() => {
@@ -203,13 +205,13 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
             {linhas.length ? (
               <>
                 <div className="cost-bar" aria-label="Distribuição do custo dos ingredientes">
-                  {linhas.map((linha) => <span key={linha.id} className={`cost-bar-segment ${linha.cor}`} style={{ width: `${linha.percentual}%` }} title={`${linha.item.produto.nome}: ${linha.percentual.toFixed(1)}%`} />)}
+                  {linhas.map((linha) => <span key={linha.id} className={`cost-bar-segment ${linha.cor}`} style={{ width: `${linha.percentual}%` }} title={`${linha.produto.nome}: ${linha.percentual.toFixed(1)}%`} />)}
                 </div>
                 <div className="breakdown-list">
                   {linhas.map((linha) => (
                     <article className="breakdown-row" key={linha.id}>
                       <span className={`breakdown-dot ${linha.cor}`} />
-                      <div className="breakdown-main"><h3>{linha.item.produto.nome}</h3><p>{formatarQuantidade(linha.quantidade)} {unidadeBase(linha.item.unidade_medida)} por receita</p></div>
+                      <div className="breakdown-main"><h3>{linha.produto.nome}</h3><p>{formatarQuantidade(linha.quantidade)} {unidadeBase(linha.itemAtual.unidade_medida)} por receita</p></div>
                       <div className="breakdown-value"><strong>{formatarMoeda(linha.custo)}</strong><span>{linha.percentual.toFixed(0)}% do custo</span></div>
                     </article>
                   ))}
