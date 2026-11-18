@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import {
   ArrowRight,
   Check,
@@ -61,11 +62,11 @@ export default function MontarPrato({
   const custoParcial =
     item && quantidade
       ? calcularCustoIngrediente(
-          item.preco_custo,
-          item.quantidade_compra,
-          Number(quantidade),
-          item.unidade_medida,
-        )
+        item.preco_custo,
+        item.quantidade_compra,
+        Number(quantidade),
+        item.unidade_medida,
+      )
       : 0;
   const quantidadeAtual = Number(ingredienteEditando?.quantidade ?? 0);
   const quantidadeNova = Number(quantidadeEditada);
@@ -463,105 +464,108 @@ export default function MontarPrato({
         )}
       </section>
 
-      {modalEdicaoAberto && (
-        <div
-          className="modal-overlay"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) fecharModalEdicao();
-          }}
-        >
-          <section
-            aria-labelledby="edit-ingredient-title"
-            aria-modal="true"
-            className="modal-content"
-            role="dialog"
+
+      {modalEdicaoAberto &&
+        ReactDOM.createPortal(
+          <div
+            className="modal-overlay"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) fecharModalEdicao();
+            }}
           >
-            <header className="edit-modal-header">
-              <span className="section-icon edit-modal-icon"><Pencil size={19} /></span>
-              <div className="edit-modal-heading">
-                <h2 id="edit-ingredient-title">Editar ingrediente</h2>
-                <p>Atualize a quantidade usada nesta receita.</p>
-              </div>
-              <button
-                className="icon-button"
-                disabled={salvando}
-                type="button"
-                onClick={fecharModalEdicao}
-                aria-label="Fechar edição"
-              >
-                <X size={19} />
-              </button>
-            </header>
-
-            <div className="edit-ingredient-context">
-              <span className="dish-icon"><CookingPot size={19} /></span>
-              <div>
-                <strong>{ingredienteEditando?.produto?.nome}</strong>
-                <span>Quantidade por receita em {unidadeBase(ingredienteEditando?.produto?.ultimo_item?.unidade_medida) || "unidade"}</span>
-              </div>
-            </div>
-
-            <form className="edit-ingredient-form" onSubmit={atualizarIngredientePrato}>
-              <label className="field-label">
-                Nova quantidade
-                <input
-                  autoFocus
-                  required
-                  min="0.001"
-                  step="0.001"
-                  type="number"
-                  value={quantidadeEditada}
-                  onChange={(event) => {
-                    setQuantidadeEditada(event.target.value);
-                    setErroEdicao("");
-                  }}
-                  placeholder="0"
-                />
-              </label>
-              <div className="edit-cost-preview" aria-live="polite">
-                <div>
-                  <span>Antes</span>
-                  <strong>{formatarMoeda(calcularCustoIngrediente(
-                    ingredienteEditando.produto.ultimo_item.preco_custo,
-                    ingredienteEditando.produto.ultimo_item.quantidade_compra,
-                    quantidadeAtual,
-                    ingredienteEditando.produto.ultimo_item.unidade_medida,
-                  ))}</strong>
+            <section
+              aria-labelledby="edit-ingredient-title"
+              aria-modal="true"
+              className="modal-content"
+              role="dialog"
+            >
+              <header className="edit-modal-header">
+                <span className="section-icon edit-modal-icon"><Pencil size={19} /></span>
+                <div className="edit-modal-heading">
+                  <h2 id="edit-ingredient-title">Editar ingrediente</h2>
+                  <p>Atualize a quantidade usada nesta receita.</p>
                 </div>
-                <ArrowRight size={17} aria-hidden="true" />
-                <div className="edit-cost-new">
-                  <span>Novo custo estimado</span>
-                  <strong>{custoAtualizado === null ? "—" : formatarMoeda(custoAtualizado)}</strong>
-                </div>
-              </div>
-              {erroEdicao && <p className="form-error edit-modal-error" role="alert"><CircleAlert size={16} />{erroEdicao}</p>}
-              <div className="edit-modal-actions">
                 <button
-                  className="button-secondary"
+                  className="icon-button"
                   disabled={salvando}
                   type="button"
                   onClick={fecharModalEdicao}
+                  aria-label="Fechar edição"
                 >
-                  Cancelar
+                  <X size={19} />
                 </button>
-                <button
-                  className="button-primary"
-                  disabled={salvando || custoAtualizado === null}
-                  type="submit"
-                >
-                  {salvando ? (
-                    <span className="loader-dot" />
-                  ) : (
-                    <>
-                      <Check size={18} /> Salvar alterações
-                    </>
-                  )}
-                </button>
+              </header>
+
+              <div className="edit-ingredient-context">
+                <span className="dish-icon"><CookingPot size={19} /></span>
+                <div>
+                  <strong>{ingredienteEditando?.produto?.nome}</strong>
+                  <span>Quantidade por receita em {unidadeBase(ingredienteEditando?.produto?.ultimo_item?.unidade_medida) || "unidade"}</span>
+                </div>
               </div>
-            </form>
-          </section>
-        </div>
-      )}
+
+              <form className="edit-ingredient-form" onSubmit={atualizarIngredientePrato}>
+                <label className="field-label">
+                  Nova quantidade
+                  <input
+                    autoFocus
+                    required
+                    min="0.001"
+                    step="0.001"
+                    type="number"
+                    value={quantidadeEditada}
+                    onChange={(event) => {
+                      setQuantidadeEditada(event.target.value);
+                      setErroEdicao("");
+                    }}
+                    placeholder="0"
+                  />
+                </label>
+                <div className="edit-cost-preview" aria-live="polite">
+                  <div>
+                    <span>Antes</span>
+                    <strong>{formatarMoeda(calcularCustoIngrediente(
+                      ingredienteEditando.produto.ultimo_item.preco_custo,
+                      ingredienteEditando.produto.ultimo_item.quantidade_compra,
+                      quantidadeAtual,
+                      ingredienteEditando.produto.ultimo_item.unidade_medida,
+                    ))}</strong>
+                  </div>
+                  <ArrowRight size={17} aria-hidden="true" />
+                  <div className="edit-cost-new">
+                    <span>Novo custo estimado</span>
+                    <strong>{custoAtualizado === null ? "—" : formatarMoeda(custoAtualizado)}</strong>
+                  </div>
+                </div>
+                {erroEdicao && <p className="form-error edit-modal-error" role="alert"><CircleAlert size={16} />{erroEdicao}</p>}
+                <div className="edit-modal-actions">
+                  <button
+                    className="button-secondary"
+                    disabled={salvando}
+                    type="button"
+                    onClick={fecharModalEdicao}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="button-primary"
+                    disabled={salvando || custoAtualizado === null}
+                    type="submit"
+                  >
+                    {salvando ? (
+                      <span className="loader-dot" />
+                    ) : (
+                      <>
+                        <Check size={18} /> Salvar alterações
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
