@@ -92,7 +92,17 @@ class ProdutoSerializer(serializers.ModelSerializer):
     ultimo_item = serializers.SerializerMethodField()
 
     def get_ultimo_item(self, obj):
-        itens = obj.ultimo_item_lista
+        itens = getattr(obj, "ultimo_item_lista", None)
+        if itens is None:
+            item = obj.itens.order_by(
+                F("criado_em").desc(nulls_last=True),
+                "-id",
+            ).first()
+            return (
+                ItemSerializer(item, context=self.context).data
+                if item
+                else None
+            )
         if itens:
             return ItemSerializer(itens[0], context=self.context).data
         return None

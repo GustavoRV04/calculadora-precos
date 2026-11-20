@@ -198,7 +198,7 @@ class ComercioApiTests(APITestCase):
 			unidade_medida='G',
 		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
-		PratoProduto.objects.create(prato=prato, item=compra_anterior, quantidade='500')
+		PratoProduto.objects.create(prato=prato, produto=produto, quantidade='500')
 
 		compra_resposta = self.client.post('/api/v1/itens', {
 			'produto_id': produto.id,
@@ -211,11 +211,11 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(compra_resposta.status_code, status.HTTP_201_CREATED)
 		self.assertEqual(Item.objects.filter(produto=produto).count(), 2)
 		self.assertEqual(
-			prato_resposta.data['prato_itens'][0]['item']['preco_custo'],
+			prato_resposta.data['prato_produtos'][0]['produto']['ultimo_item']['preco_custo'],
 			'20.00',
 		)
 		self.assertEqual(
-			prato_resposta.data['prato_itens'][0]['item']['id'],
+			prato_resposta.data['prato_produtos'][0]['produto']['ultimo_item']['id'],
 			compra_resposta.data['id'],
 		)
 
@@ -329,6 +329,30 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(resposta.data['margem_lucro_percentual'], '30.25')
 		prato.refresh_from_db()
 		self.assertEqual(str(prato.margem_lucro_percentual), '30.25')
+
+	def test_margem_do_prato_com_ingredientes_pode_ser_atualizada(self):
+		produto = self.criar_produto('Farinha')
+		Item.objects.create(
+			produto=produto,
+			preco_custo='12.50',
+			quantidade_compra='1000',
+			unidade_medida='G',
+		)
+		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
+		PratoProduto.objects.create(prato=prato, produto=produto, quantidade='250')
+
+		resposta = self.client.patch(
+			f'/api/v1/pratos/{prato.id}',
+			{'margem_lucro_percentual': '30.25'},
+			format='json',
+		)
+
+		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
+		self.assertEqual(resposta.data['margem_lucro_percentual'], '30.25')
+		self.assertEqual(
+			resposta.data['prato_produtos'][0]['produto']['ultimo_item']['preco_custo'],
+			'12.50',
+		)
 
 	def test_margem_nao_pode_ser_igual_ou_maior_que_cem(self):
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
