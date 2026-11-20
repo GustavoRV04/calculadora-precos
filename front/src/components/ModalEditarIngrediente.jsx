@@ -1,6 +1,5 @@
 import ReactDOM from "react-dom";
 import { Check, X } from "lucide-react";
-import { unidadeBase } from "../utils/conversorMedidas";
 
 export default function ModalEditarIngrediente({
   aberto,
@@ -33,8 +32,8 @@ export default function ModalEditarIngrediente({
         <form className="form-grid" onSubmit={onSave}>
           <label className="field-label field-span">
             Nova quantidade (
-            {unidadeBase(ingredienteEditando?.produto?.ultimo_item?.unidade_medida) ||
-              "unidade"}
+            {ingredienteEditando?.produto?.ultimo_item?.unidade_medida ||
+              "unidade"
             )
             <input
               required

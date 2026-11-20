@@ -5,7 +5,6 @@ import {
   calcularPrato,
   pratoPorId,
 } from "../services/pratoService";
-import { unidadeBase } from "../utils/conversorMedidas";
 
 export default function ResumoPrato({ dataVersion }) {
   const [pratos, setPratos] = useState([]);
@@ -62,7 +61,7 @@ export default function ResumoPrato({ dataVersion }) {
           <li key={pratoProduto.id}>
             {pratoProduto.produto.nome}
             {" - "}
-            {pratoProduto.quantidade} {unidadeBase(pratoProduto.produto.ultimo_item?.unidade_medida) ?? "unidade"}
+            {pratoProduto.quantidade} {pratoProduto.produto.ultimo_item?.unidade_medida ?? "unidade"}
           </li>
         ))}
       </ul>

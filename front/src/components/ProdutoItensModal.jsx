@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { CircleAlert, Package, Search, X } from "lucide-react";
 import { LIMITE_PAGINACAO, listarItensDoProduto } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
-import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import Paginacao from "./Paginacao";
 
@@ -127,7 +126,7 @@ export default function ProdutoItensModal({ produto, onClose }) {
                   </div>
                   <div className="dish-cost">
                     <span>Custo unitário</span>
-                    <strong>{formatarCustoUnitario(custoUnitario)} / {unidadeBase(item.unidade_medida).toLowerCase()}</strong>
+                    <strong>{formatarCustoUnitario(custoUnitario)} / {item.unidade_medida.toLowerCase()}</strong>
                   </div>
                 </article>
               );

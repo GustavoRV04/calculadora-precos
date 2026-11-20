@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { listarPratos, adicionarIngrediente } from "../services/pratoService";
 import { listarProdutos } from "../services/produtoService";
-import { unidadeBase } from "../utils/conversorMedidas";
 
 export default function PratoItemForm({ dataVersion, onSaved }) {
   const [pratos, setPratos] = useState([]);
@@ -78,7 +77,7 @@ export default function PratoItemForm({ dataVersion, onSaved }) {
       <br />
 
       <label htmlFor="quantidade-utilizada">
-        Quantidade utilizada ({unidadeBase(produtoSelecionado?.ultimo_item?.unidade_medida) ?? "unidade"})
+        Quantidade utilizada ({produtoSelecionado?.ultimo_item?.unidade_medida ?? "unidade"})
       </label>
       <input
         id="quantidade-utilizada"

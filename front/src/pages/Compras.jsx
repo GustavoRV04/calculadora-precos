@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ArrowLeft, Check, CircleAlert, PackagePlus, Plus, ReceiptText, Search } from "lucide-react";
 import { criarItem, criarProduto, listarProdutos } from "../services/produtoService";
 import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
-import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import Paginacao from "../components/Paginacao";
 import ProdutoItensModal from "../components/ProdutoItensModal";
@@ -127,7 +126,7 @@ export default function Compras({ busca, produtos, paginacao, carregando, onBusc
           </div>
           <div className="cost-preview field-span">
             <span className="preview-icon"><ReceiptText size={20} /></span>
-            <div><span className="preview-label">Custo por {unidadeBase(unidade) === "UN" ? "unidade" : unidadeBase(unidade).toLowerCase()}</span><strong>{custoUnitario === null ? "Preencha os valores" : formatarCustoUnitario(custoUnitario)}</strong></div>
+            <div><span className="preview-label">Custo por {unidade === "UN" ? "unidade" : unidade.toLowerCase()}</span><strong>{custoUnitario === null ? "Preencha os valores" : formatarCustoUnitario(custoUnitario)}</strong></div>
           </div>
           {erro && <p className="form-error field-span" role="alert"><CircleAlert size={16} />{erro}</p>}
           <button className="button-primary field-span submit-button" disabled={salvando || carregando} type="submit">
@@ -146,7 +145,7 @@ export default function Compras({ busca, produtos, paginacao, carregando, onBusc
               const unitCost = item
                 ? calcularCustoIngrediente(item.preco_custo, item.quantidade_compra, 1, item.unidade_medida)
                 : null;
-              const base = item ? unidadeBase(item.unidade_medida) : null;
+              const base = item ? item.unidade_medida : null;
               return (
                 <article
                   className="purchase-row product-history-trigger"

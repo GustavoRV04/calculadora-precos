@@ -1,5 +1,3 @@
-import { converterParaBase } from "./conversorMedidas.js";
-
 export function calcularCustoIngrediente(
   precoCompra,
   quantidadeCompra,
@@ -19,12 +17,7 @@ export function calcularCustoIngrediente(
     throw new RangeError("A quantidade utilizada deve ser um número finito não negativo.");
   }
 
-  const quantidadeTotal = converterParaBase(
-    quantidade,
-    unidadeCompra,
-  );
-
-  return (preco / quantidadeTotal) * utilizada;
+  return (preco / quantidade) * utilizada;
 }
 
 export function calcularPrecoVendaComMargem(custo, margemPercentual) {

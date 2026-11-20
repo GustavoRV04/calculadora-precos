@@ -95,6 +95,9 @@ input, select { min-width: 0; }
 .dish-main, .purchase-main, .ingredient-main, .breakdown-main { min-width: 0; flex: 1; }
 .dish-main h3, .purchase-main h3, .ingredient-main h3, .breakdown-main h3 { overflow: hidden; margin: 0; color: var(--ink); font-size: 15px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .dish-main p, .purchase-main p, .ingredient-main p, .breakdown-main p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.ingredient-details { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 10px; margin-top: 4px; font-size: 12px; line-height: 1.35; }
+.ingredient-quantity { color: var(--muted); }
+.ingredient-unit-price { color: var(--primary); font-weight: 700; }
 .dish-cost span, .sheet-total span { color: var(--muted); font-size: 11px; }
 .dish-pricing { display: grid; flex: 0 1 420px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
 .dish-metric { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 10px; border-radius: 10px; }

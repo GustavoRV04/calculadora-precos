@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { ChartNoAxesColumnIncreasing, CircleAlert, FileText, Percent } from "lucide-react";
 import { atualizarMargemGeral, atualizarMargemPrato, calcularPrato, listarPratos, obterMargemGeral } from "../services/pratoService";
 import { calcularCustoIngrediente, calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
-import { unidadeBase } from "../utils/conversorMedidas";
 import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
@@ -211,7 +210,7 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
                   {linhas.map((linha) => (
                     <article className="breakdown-row" key={linha.id}>
                       <span className={`breakdown-dot ${linha.cor}`} />
-                      <div className="breakdown-main"><h3>{linha.produto.nome}</h3><p>{formatarQuantidade(linha.quantidade)} {unidadeBase(linha.itemAtual.unidade_medida)} por receita</p></div>
+                      <div className="breakdown-main"><h3>{linha.produto.nome}</h3><p>{formatarQuantidade(linha.quantidade)} {linha.itemAtual.unidade_medida} por receita</p></div>
                       <div className="breakdown-value"><strong>{formatarMoeda(linha.custo)}</strong><span>{linha.percentual.toFixed(0)}% do custo</span></div>
                     </article>
                   ))}
