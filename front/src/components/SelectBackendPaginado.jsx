@@ -54,10 +54,14 @@ export default function SelectBackendPaginado({ buscarPagina, paraOpcao, noOptio
   }
 
   const SelectComponent = onCreateOption ? CreatableSelect : Select;
+  const opcaoAtualizadaExiste = opcaoAtualizada
+    && opcoes.some((opcao) => String(opcao.value) === String(opcaoAtualizada.value));
   const opcoesAtualizadas = opcaoAtualizada
-    ? opcoes.map((opcao) => (
-      String(opcao.value) === String(opcaoAtualizada.value) ? opcaoAtualizada : opcao
-    ))
+    ? opcaoAtualizadaExiste
+      ? opcoes.map((opcao) => (
+        String(opcao.value) === String(opcaoAtualizada.value) ? opcaoAtualizada : opcao
+      ))
+      : [opcaoAtualizada, ...opcoes]
     : opcoes;
 
   return (
