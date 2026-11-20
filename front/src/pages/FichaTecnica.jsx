@@ -35,7 +35,8 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
     const itemAtual = pratoProduto.produto?.ultimo_item;
     if (!itemAtual) return [];
     const custo = calcularCustoIngrediente(itemAtual.preco_custo, itemAtual.quantidade_compra, pratoProduto.quantidade, itemAtual.unidade_medida);
-    return [{ ...pratoProduto, itemAtual, custo, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] }];
+    const custoUnitario = calcularCustoIngrediente(itemAtual.preco_custo, itemAtual.quantidade_compra, 1, itemAtual.unidade_medida);
+    return [{ ...pratoProduto, itemAtual, custo, custoUnitario, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] }];
   });
 
   useEffect(() => {
@@ -210,7 +211,17 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
                   {linhas.map((linha) => (
                     <article className="breakdown-row" key={linha.id}>
                       <span className={`breakdown-dot ${linha.cor}`} />
-                      <div className="breakdown-main"><h3>{linha.produto.nome}</h3><p>{formatarQuantidade(linha.quantidade)} {linha.itemAtual.unidade_medida} por receita</p></div>
+                      <div className="breakdown-main">
+                        <h3>{linha.produto.nome}</h3>
+                        <div className="ingredient-details">
+                          <span className="ingredient-quantity">
+                            {formatarQuantidade(linha.quantidade)} {linha.itemAtual.unidade_medida?.toLowerCase()}
+                          </span>
+                          <span className="ingredient-unit-price">
+                            {formatarMoeda(linha.custoUnitario)} / {linha.itemAtual.unidade_medida?.toLowerCase()}
+                          </span>
+                        </div>
+                      </div>
                       <div className="breakdown-value"><strong>{formatarMoeda(linha.custo)}</strong><span>{linha.percentual.toFixed(0)}% do custo</span></div>
                     </article>
                   ))}
