@@ -20,6 +20,26 @@ export function calcularCustoIngrediente(
   return (preco / quantidade) * utilizada;
 }
 
+export function calcularCustoIngredienteReceita(
+  precoCompra,
+  quantidadeCompra,
+  quantidadeUtilizada,
+  unidadeCompra,
+) {
+  const fatorConversao = unidadeCompra === "KG" || unidadeCompra === "L" ? 1000 : 1;
+  return calcularCustoIngrediente(
+    precoCompra,
+    Number(quantidadeCompra) * fatorConversao,
+    quantidadeUtilizada,
+  );
+}
+
+export function unidadeUsoReceita(unidadeCompra) {
+  if (unidadeCompra === "KG") return "G";
+  if (unidadeCompra === "L") return "ML";
+  return unidadeCompra;
+}
+
 export function calcularPrecoVendaComMargem(custo, margemPercentual) {
   const percentual = Number(margemPercentual);
   const custoNumerico = Number(custo);

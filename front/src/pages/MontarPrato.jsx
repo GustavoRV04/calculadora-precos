@@ -21,8 +21,8 @@ import {
   removerIngrediente,
 } from "../services/pratoService";
 import { listarProdutos } from "../services/produtoService";
-import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
-import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import { calcularCustoIngrediente, calcularCustoIngredienteReceita, unidadeUsoReceita } from "../utils/calculadoraPreco";
+import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 export default function MontarPrato({
@@ -55,13 +55,15 @@ export default function MontarPrato({
   const produto = produtoSelecionado?.registro;
   console.log("produto", produto)
   const item = produto?.ultimo_item;
+  const unidadeQuantidade = unidadeUsoReceita(item?.unidade_medida)?.toLowerCase() || "unidade";
+  const passoQuantidade = unidadeQuantidade === "g" || unidadeQuantidade === "ml" ? "1" : "0.001";
   const opcaoPratoSelecionado =
     pratoSelecionado ??
     (prato ? { value: prato.id, label: prato.nome, registro: prato } : null);
 
   const custoParcial =
     item && quantidade
-      ? calcularCustoIngrediente(
+      ? calcularCustoIngredienteReceita(
         item.preco_custo,
         item.quantidade_compra,
         Number(quantidade),
@@ -71,7 +73,7 @@ export default function MontarPrato({
   const quantidadeAtual = Number(ingredienteEditando?.quantidade ?? 0);
   const quantidadeNova = Number(quantidadeEditada);
   const custoAtualizado = ingredienteEditando?.produto?.ultimo_item && quantidadeNova > 0
-    ? calcularCustoIngrediente(
+      ? calcularCustoIngredienteReceita(
       ingredienteEditando.produto.ultimo_item.preco_custo,
       ingredienteEditando.produto.ultimo_item.quantidade_compra,
       quantidadeNova,
@@ -306,6 +308,7 @@ export default function MontarPrato({
               onChange={(opcao) => {
                 setProdutoSelecionado(opcao);
                 setProdutoId(String(opcao?.value ?? ""));
+                setQuantidade("");
               }}
               paraOpcao={opcaoProduto}
               placeholder="Busque um insumo comprado"
@@ -313,11 +316,11 @@ export default function MontarPrato({
             />
           </label>
           <label className="field-label">
-            Quantidade na receita ({item?.unidade_medida?.toLowerCase() || "unidade"})
+            Quantidade na receita ({unidadeQuantidade})
             <input
               required
-              min="0.001"
-              step="0.001"
+              min={passoQuantidade}
+              step={passoQuantidade}
               type="number"
               value={quantidade}
               onChange={(event) => setQuantidade(event.target.value)}
@@ -384,7 +387,7 @@ export default function MontarPrato({
               {ingredientesFiltrados.map((pratoProduto) => {
                 const itemAtual = pratoProduto.produto.ultimo_item;
                 const custo = itemAtual
-                  ? calcularCustoIngrediente(
+                  ? calcularCustoIngredienteReceita(
                     itemAtual.preco_custo,
                     itemAtual.quantidade_compra,
                     pratoProduto.quantidade,
@@ -409,12 +412,12 @@ export default function MontarPrato({
                       <div className="ingredient-details">
                         <span className="ingredient-quantity">
                           {formatarQuantidade(pratoProduto.quantidade)}{" "}
-                          {itemAtual ? itemAtual.unidade_medida?.toLowerCase() : "unidade"}
+                          {itemAtual ? unidadeUsoReceita(itemAtual.unidade_medida)?.toLowerCase() : "unidade"}
                         </span>
                         <span className="ingredient-unit-price">
                           {custoUnitario === null
                             ? "Preço unitário indisponível"
-                            : `${formatarMoeda(custoUnitario)} / ${itemAtual.unidade_medida?.toLowerCase()}`}
+                            : `${formatarCustoUnitario(custoUnitario)} / ${itemAtual.unidade_medida?.toLowerCase()}`}
                         </span>
                       </div>
                     </div>
@@ -514,7 +517,7 @@ export default function MontarPrato({
                 <span className="dish-icon"><CookingPot size={19} /></span>
                 <div>
                   <strong>{ingredienteEditando?.produto?.nome}</strong>
-                  <span>Quantidade por receita em {ingredienteEditando?.produto?.ultimo_item?.unidade_medida || "unidade"}</span>
+                  <span>Quantidade por receita em {unidadeUsoReceita(ingredienteEditando?.produto?.ultimo_item?.unidade_medida)?.toLowerCase() || "unidade"}</span>
                 </div>
               </div>
 
@@ -538,7 +541,7 @@ export default function MontarPrato({
                 <div className="edit-cost-preview" aria-live="polite">
                   <div>
                     <span>Antes</span>
-                    <strong>{formatarMoeda(calcularCustoIngrediente(
+                    <strong>{formatarMoeda(calcularCustoIngredienteReceita(
                       ingredienteEditando.produto.ultimo_item.preco_custo,
                       ingredienteEditando.produto.ultimo_item.quantidade_compra,
                       quantidadeAtual,

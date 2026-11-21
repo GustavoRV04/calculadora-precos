@@ -1,7 +1,7 @@
 import { requisicaoApi } from "./api";
 import { LIMITE_PAGINACAO } from "./produtoService";
 
-import { calcularCustoIngrediente } from "../utils/calculadoraPreco";
+import { calcularCustoIngredienteReceita } from "../utils/calculadoraPreco";
 
 export function calcularPrato(prato) {
   const total = (prato?.prato_produtos ?? []).reduce((soma, pratoProduto) => {
@@ -10,7 +10,7 @@ export function calcularPrato(prato) {
 
     return (
       soma +
-      calcularCustoIngrediente(
+      calcularCustoIngredienteReceita(
         item.preco_custo,
         item.quantidade_compra,
         pratoProduto.quantidade,

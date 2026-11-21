@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ChartNoAxesColumnIncreasing, CircleAlert, FileText, Percent } from "lucide-react";
 import { atualizarMargemGeral, atualizarMargemPrato, calcularPrato, listarPratos, obterMargemGeral } from "../services/pratoService";
-import { calcularCustoIngrediente, calcularPrecoVendaComMargem } from "../utils/calculadoraPreco";
-import { formatarMoeda, formatarQuantidade } from "../utils/formatacao";
+import { calcularCustoIngrediente, calcularCustoIngredienteReceita, calcularPrecoVendaComMargem, unidadeUsoReceita } from "../utils/calculadoraPreco";
+import { formatarCustoUnitario, formatarMoeda, formatarQuantidade } from "../utils/formatacao";
 import SelectBackendPaginado from "../components/SelectBackendPaginado";
 
 const cores = ["blue", "mint", "lavender", "coral"];
@@ -34,7 +34,7 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
   const linhas = (prato?.prato_produtos ?? []).flatMap((pratoProduto, index) => {
     const itemAtual = pratoProduto.produto?.ultimo_item;
     if (!itemAtual) return [];
-    const custo = calcularCustoIngrediente(itemAtual.preco_custo, itemAtual.quantidade_compra, pratoProduto.quantidade, itemAtual.unidade_medida);
+    const custo = calcularCustoIngredienteReceita(itemAtual.preco_custo, itemAtual.quantidade_compra, pratoProduto.quantidade, itemAtual.unidade_medida);
     const custoUnitario = calcularCustoIngrediente(itemAtual.preco_custo, itemAtual.quantidade_compra, 1, itemAtual.unidade_medida);
     return [{ ...pratoProduto, itemAtual, custo, custoUnitario, percentual: total ? (custo / total) * 100 : 0, cor: cores[index % cores.length] }];
   });
@@ -215,10 +215,10 @@ export default function FichaTecnica({ pratos, pratoSelecionado, onSelectPrato, 
                         <h3>{linha.produto.nome}</h3>
                         <div className="ingredient-details">
                           <span className="ingredient-quantity">
-                            {formatarQuantidade(linha.quantidade)} {linha.itemAtual.unidade_medida?.toLowerCase()}
+                            {formatarQuantidade(linha.quantidade)} {unidadeUsoReceita(linha.itemAtual.unidade_medida)?.toLowerCase()}
                           </span>
                           <span className="ingredient-unit-price">
-                            {formatarMoeda(linha.custoUnitario)} / {linha.itemAtual.unidade_medida?.toLowerCase()}
+                            {formatarCustoUnitario(linha.custoUnitario)} / {linha.itemAtual.unidade_medida?.toLowerCase()}
                           </span>
                         </div>
                       </div>
