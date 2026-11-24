@@ -81,4 +81,9 @@ class PratoProduto(models.Model):
     quantidade = models.DecimalField(max_digits=10, decimal_places=3, help_text="Quantidade usada na receita")
 
     def __str__(self):
-        return f"{self.quantidade} {self.produto.ultimo_item.unidade_medida} de {self.item.produto.nome} em {self.prato.nome}"
+        ultimo_item = self.produto.itens.order_by(
+            F("criado_em").desc(nulls_last=True),
+            "-id",
+        ).first()
+        unidade = f" {ultimo_item.unidade_medida}" if ultimo_item else ""
+        return f"{self.quantidade}{unidade} de {self.produto.nome} em {self.prato.nome}"

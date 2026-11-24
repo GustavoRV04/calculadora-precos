@@ -118,16 +118,13 @@ class MargemLucroGeralView(APIView):
 
 
 class RestauranteScopedViewSet(viewsets.ModelViewSet):
-    #authentication_classes = [TokenAuthentication]
-    #permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_restaurante(self):
-        if self.request.user.is_authenticated:
-            restaurante = Restaurante.objects.filter(
-                usuario=self.request.user,
-            ).first()
-        else:
-            restaurante = Restaurante.objects.first()
+        restaurante = Restaurante.objects.filter(
+            usuario=self.request.user,
+        ).first()
         if not restaurante:
             raise PermissionDenied("Esta conta não possui um comércio associado.")
         return restaurante

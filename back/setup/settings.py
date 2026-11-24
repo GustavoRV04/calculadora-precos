@@ -81,18 +81,22 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-db_url = os.environ.get('POSTGRES_URL_NON_POOLING') or os.environ.get('POSTGRES_URL')
+is_vercel = os.environ.get('VERCEL') == '1'
+if is_vercel:
+    db_url = os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING')
+else:
+    db_url = os.environ.get('POSTGRES_URL_NON_POOLING') or os.environ.get('POSTGRES_URL')
 if db_url:
     # Ignore query parameters added by the database provider.
     db_url = db_url.split('?')[0]
     DATABASES = {
         'default': dj_database_url.parse(
             db_url,
-            conn_max_age=600,
+            conn_max_age=0 if is_vercel else 600,
         )
     }
 else:
-    if os.environ.get('VERCEL') == '1':
+    if is_vercel:
         raise ImproperlyConfigured(
             'Configure POSTGRES_URL_NON_POOLING or POSTGRES_URL in Vercel.'
         )

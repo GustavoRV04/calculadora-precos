@@ -53,6 +53,11 @@ class ComercioApiTests(APITestCase):
 
 		self.assertEqual(resposta.status_code, status.HTTP_200_OK)
 		self.assertEqual(resposta.data['restaurante']['id'], self.restaurante.id)
+		self.client.credentials(HTTP_AUTHORIZATION=f"Token {resposta.data['token']}")
+
+		produtos = self.client.get('/api/v1/produtos')
+
+		self.assertEqual(produtos.status_code, status.HTTP_200_OK)
 
 	def test_margem_geral_aplica_a_todos_os_pratos_do_comercio(self):
 		prato = Prato.objects.create(
@@ -139,7 +144,7 @@ class ComercioApiTests(APITestCase):
 		item = Item.objects.get(pk=resposta.data['id'])
 		self.assertEqual(item.produto, produto)
 		self.assertEqual(item.produto.restaurante, self.restaurante)
-		self.assertEqual(resposta.data['produto']['nome'], 'Farinha')
+		self.assertEqual(resposta.data['produto_id'], produto.id)
 		self.assertIsNotNone(resposta.data['criado_em'])
 
 	def test_cadastrar_produto_duplicado_reutiliza_o_insumo_existente(self):
@@ -178,7 +183,7 @@ class ComercioApiTests(APITestCase):
 		self.assertEqual(Item.objects.filter(produto=produto_existente).count(), 2)
 		self.assertTrue(Item.objects.filter(pk=compra_anterior.pk).exists())
 		self.assertNotEqual(compra_resposta.data['id'], compra_anterior.id)
-		self.assertEqual(compra_resposta.data['produto']['id'], produto_existente.id)
+		self.assertEqual(compra_resposta.data['produto_id'], produto_existente.id)
 		self.assertIsNotNone(compra_resposta.data['criado_em'])
 		itens = historico_resposta.data.get('results', historico_resposta.data)
 		self.assertEqual(itens[0]['id'], compra_resposta.data['id'])
@@ -261,27 +266,21 @@ class ComercioApiTests(APITestCase):
 
 		self.assertFalse(Item.objects.exists())
 
-	def test_item_do_prato_fica_vinculado_ao_prato_e_item(self):
+	def test_produto_do_prato_fica_vinculado_ao_prato_e_produto(self):
 		produto = self.criar_produto('Farinha')
-		item = Item.objects.create(
-			produto=produto,
-			preco_custo='12.50',
-			quantidade_compra='1000',
-			unidade_medida='G',
-		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
 
-		resposta = self.client.post('/api/v1/prato-itens', {
+		resposta = self.client.post('/api/v1/prato-produtos', {
 			'prato_id': prato.id,
-			'item_id': item.id,
+			'produto_id': produto.id,
 			'quantidade': '250',
 		})
 
 		self.assertEqual(resposta.status_code, status.HTTP_201_CREATED)
-		prato_item = PratoProduto.objects.get(pk=resposta.data['id'])
-		self.assertEqual(prato_item.prato, prato)
-		self.assertEqual(prato_item.item, item)
-		self.assertEqual(resposta.data['item']['produto']['nome'], 'Farinha')
+		prato_produto = PratoProduto.objects.get(pk=resposta.data['id'])
+		self.assertEqual(prato_produto.prato, prato)
+		self.assertEqual(prato_produto.produto, produto)
+		self.assertEqual(resposta.data['produto']['nome'], 'Farinha')
 
 	def test_comercio_nao_lista_dados_de_outro(self):
 		proprio = self.criar_produto('Farinha')
@@ -289,8 +288,9 @@ class ComercioApiTests(APITestCase):
 
 		produtos = self.client.get('/api/v1/produtos')
 		self.assertEqual(produtos.status_code, status.HTTP_200_OK)
-		self.assertEqual([produto['id'] for produto in produtos.data], [proprio.id])
-		self.assertNotIn(outro.id, [produto['id'] for produto in produtos.data])
+		resultados = produtos.data['results']
+		self.assertEqual([produto['id'] for produto in resultados], [proprio.id])
+		self.assertNotIn(outro.id, [produto['id'] for produto in resultados])
 
 	def test_nao_permite_misturar_comercios_em_um_prato(self):
 		produto = self.criar_produto('Farinha', self.outro_restaurante)
@@ -302,9 +302,9 @@ class ComercioApiTests(APITestCase):
 		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
 
-		resposta = self.client.post('/api/v1/prato-itens', {
+		resposta = self.client.post('/api/v1/prato-produtos', {
 			'prato_id': prato.id,
-			'item_id': item.id,
+			'produto_id': produto.id,
 			'quantidade': '250',
 		})
 
@@ -385,14 +385,30 @@ class ComercioApiTests(APITestCase):
 			unidade_medida='G',
 		)
 		prato = Prato.objects.create(nome='Bolo', restaurante=self.restaurante)
-		prato_item = PratoProduto.objects.create(prato=prato, item=item, quantidade='250')
+		prato_item = PratoProduto.objects.create(
+			prato=prato,
+			produto=produto,
+			quantidade='250',
+		)
 
 		self.assertEqual(str(item), 'Farinha')
 		self.assertEqual(str(prato_item), '250 G de Farinha em Bolo')
 
 	def test_endpoints_de_registro_exigem_autenticacao(self):
+		produto = self.criar_produto('Farinha')
 		self.client.force_authenticate(user=None)
 
-		resposta = self.client.get('/api/v1/produtos')
+		for caminho in ['/api/v1/produtos', '/api/v1/itens']:
+			with self.subTest(caminho=caminho):
+				resposta = self.client.get(caminho)
+				self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
+
+		resposta = self.client.post('/api/v1/itens', {
+			'produto_id': produto.id,
+			'preco_custo': '12.50',
+			'quantidade_compra': '1000',
+			'unidade_medida': 'G',
+		})
 
 		self.assertEqual(resposta.status_code, status.HTTP_401_UNAUTHORIZED)
+		self.assertFalse(Item.objects.exists())

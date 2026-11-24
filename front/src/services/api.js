@@ -34,11 +34,28 @@ export async function requisicaoApi(caminho, opcoes = {}) {
 		headers,
 		body: body === undefined ? undefined : JSON.stringify(body),
 	});
-	const dados = resposta.status === 204 ? null : await resposta.json();
+	let dados = null;
+	if (resposta.status !== 204) {
+		const contentType = resposta.headers.get("content-type") ?? "";
+		if (contentType.includes("json")) {
+			try {
+				dados = await resposta.json();
+			} catch {
+				if (resposta.ok) {
+					throw new Error("A API retornou uma resposta inválida. Tente novamente.");
+				}
+			}
+		} else if (resposta.ok) {
+			throw new Error("A API retornou uma resposta inesperada. Tente novamente.");
+		}
+	}
 
 	if (!resposta.ok) {
 		const mensagem = dados?.detail ?? Object.values(dados ?? {}).flat().join(" ");
-		const erro = new Error(mensagem || "Não foi possível concluir a operação.");
+		const mensagemPadrao = resposta.status >= 500
+			? `O servidor está temporariamente indisponível (HTTP ${resposta.status}). Tente novamente em instantes.`
+			: `Não foi possível concluir a operação (HTTP ${resposta.status}).`;
+		const erro = new Error(mensagem || mensagemPadrao);
 		erro.status = resposta.status;
 		throw erro;
 	}
